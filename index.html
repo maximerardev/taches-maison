@@ -1,201 +1,176 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="default" />
-<meta name="apple-mobile-web-app-title" content="Tâches" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Tâches"/>
 <title>Tâches domestiques</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
-  :root {
-    --bg: #f7f6f3;
-    --surface: #ffffff;
-    --border: rgba(0,0,0,0.09);
-    --border-md: rgba(0,0,0,0.16);
-    --text: #1a1a18;
-    --muted: #6b6b68;
-    --hint: #a8a8a5;
-    --anais: #1a6fbf;
-    --anais-bg: #e8f1fb;
-    --maxime: #0d7a5f;
-    --maxime-bg: #e0f4ed;
-    --commun: #b5460e;
-    --commun-bg: #fdeee7;
-    --radius: 12px;
-    --radius-sm: 8px;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #141413; --surface: #1e1e1c; --border: rgba(255,255,255,0.08);
-      --border-md: rgba(255,255,255,0.14); --text: #f0efe9; --muted: #9a9a96; --hint: #5a5a57;
-      --anais: #5da0e8; --anais-bg: #1a2e42; --maxime: #3db88a; --maxime-bg: #122e24;
-      --commun: #e07040; --commun-bg: #2e1a0e;
-    }
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  html, body { background: var(--bg); font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif; color: var(--text); }
-  body { max-width: 480px; margin: 0 auto; }
-  .app { display: flex; flex-direction: column; min-height: 100dvh; }
-
-  /* Header */
-  .header { padding: 14px 16px 10px; background: var(--surface); border-bottom: 0.5px solid var(--border); position: sticky; top: 0; z-index: 10; }
-  .header-row { display: flex; align-items: center; justify-content: space-between; }
-  .app-title { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
-  .week-nav { display: flex; align-items: center; gap: 8px; }
-  .week-btn { background: none; border: 0.5px solid var(--border-md); border-radius: 6px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); font-size: 15px; }
-  .week-btn:active { background: var(--bg); }
-  .week-label { font-size: 13px; color: var(--muted); min-width: 56px; text-align: center; }
-  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--hint); flex-shrink: 0; transition: background 0.3s; }
-  .sync-dot.synced { background: var(--maxime); }
-  .sync-dot.syncing { background: #e8a020; }
-
-  /* Summary */
-  .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; padding: 12px 14px; }
-  .sum-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 8px; text-align: center; }
-  .sum-label { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
-  .sum-value { font-size: 20px; font-weight: 600; letter-spacing: -0.5px; }
-  .sum-sub { font-size: 10px; color: var(--hint); margin-top: 1px; }
-  .sum-card.anais .sum-value { color: var(--anais); }
-  .sum-card.maxime .sum-value { color: var(--maxime); }
-  .sum-card.commun .sum-value { color: var(--commun); }
-
-  /* Bar */
-  .bar-wrap { padding: 0 14px 12px; display: none; }
-  .bar-wrap.visible { display: block; }
-  .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-  .bar-name { font-size: 12px; color: var(--muted); width: 52px; }
-  .bar-track { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
-  .bar-fill.anais { background: var(--anais); }
-  .bar-fill.maxime { background: var(--maxime); }
-  .bar-pct { font-size: 12px; color: var(--muted); min-width: 34px; text-align: right; }
-
-  /* Tabs */
-  .tabs { display: flex; background: var(--bg); border-bottom: 0.5px solid var(--border); }
-  .tab-btn { flex: 1; padding: 9px 2px; font-size: 12px; color: var(--muted); border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -0.5px; white-space: nowrap; }
-  .tab-btn.active { color: var(--text); font-weight: 500; border-bottom-color: var(--text); }
-
-  /* Panes */
-  .pane { display: none; padding: 14px; }
-  .pane.active { display: block; }
-
-  /* Form */
-  .form-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; }
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-  .field { display: flex; flex-direction: column; gap: 4px; }
-  .field label { font-size: 12px; color: var(--muted); }
-  .field select, .field input { font-size: 15px; padding: 8px 10px; border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); width: 100%; -webkit-appearance: none; appearance: none; }
-  .field select:focus, .field input:focus { outline: none; border-color: var(--anais); }
-  .field-full { margin-bottom: 10px; }
-  .btn-save { width: 100%; padding: 11px; background: var(--text); color: var(--bg); border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 2px; }
-  .btn-save:active { opacity: 0.75; }
-
-  /* History */
-  .entries-list { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .entry { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 0.5px solid var(--border); }
-  .entry:last-child { border-bottom: none; }
-  .avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
-  .avatar.A { background: var(--anais-bg); color: var(--anais); }
-  .avatar.M { background: var(--maxime-bg); color: var(--maxime); }
-  .avatar.C { background: var(--commun-bg); color: var(--commun); }
-  .entry-body { flex: 1; min-width: 0; }
-  .entry-task { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .entry-meta { font-size: 11px; color: var(--muted); margin-top: 1px; }
-  .entry-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
-  .entry-min { font-size: 13px; color: var(--muted); }
-  .del-btn { background: none; border: none; cursor: pointer; color: var(--hint); font-size: 17px; padding: 2px 4px; line-height: 1; }
-  .del-btn:active { color: #e24b4a; }
-  .empty { padding: 32px 16px; text-align: center; font-size: 14px; color: var(--hint); }
-
-  /* Stats section titles */
-  .stats-pane-title { font-size: 13px; font-weight: 600; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; margin: 16px 0 8px; }
-  .stats-pane-title:first-child { margin-top: 0; }
-
-  /* Person stats card */
-  .person-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; }
-  .person-card-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
-  .person-card-name { font-size: 14px; font-weight: 600; }
-  .person-card-name.anais { color: var(--anais); }
-  .person-card-name.maxime { color: var(--maxime); }
-  .person-card-totals { display: flex; gap: 14px; }
-  .person-total-item { text-align: right; }
-  .person-total-val { font-size: 18px; font-weight: 600; letter-spacing: -0.4px; }
-  .person-total-lbl { font-size: 10px; color: var(--hint); }
-  .person-task-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-  .person-task-row:last-child { margin-bottom: 0; }
-  .person-task-name { font-size: 12px; color: var(--muted); width: 118px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .person-task-track { flex: 1; height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; }
-  .person-task-fill { height: 100%; border-radius: 3px; }
-  .person-task-fill.anais { background: var(--anais); }
-  .person-task-fill.maxime { background: var(--maxime); }
-  .person-task-vals { font-size: 11px; color: var(--muted); min-width: 70px; text-align: right; white-space: nowrap; }
-
-  /* Task breakdown card */
-  .task-breakdown-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 10px; }
-  .task-breakdown-row { padding: 10px 14px; border-bottom: 0.5px solid var(--border); }
-  .task-breakdown-row:last-child { border-bottom: none; }
-  .task-breakdown-name { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
-  .task-who-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
-  .task-who-row:last-child { margin-bottom: 0; }
-  .task-who-label { font-size: 11px; width: 58px; flex-shrink: 0; }
-  .task-who-label.anais { color: var(--anais); }
-  .task-who-label.maxime { color: var(--maxime); }
-  .task-who-label.commun { color: var(--commun); }
-  .task-who-track { flex: 1; height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; }
-  .task-who-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
-  .task-who-fill.anais { background: var(--anais); }
-  .task-who-fill.maxime { background: var(--maxime); }
-  .task-who-fill.commun { background: var(--commun); }
-  .task-who-vals { font-size: 11px; color: var(--muted); min-width: 80px; text-align: right; white-space: nowrap; }
-
-  /* Donut */
-  .donut-wrap { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; }
-  .donut-canvas-wrap { position: relative; width: 100%; height: 200px; margin-bottom: 12px; }
-  .legend { display: flex; flex-direction: column; gap: 7px; }
-  .legend-row { display: flex; align-items: center; gap: 8px; }
-  .legend-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
-  .legend-name { font-size: 12px; color: var(--muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .legend-min { font-size: 12px; font-weight: 500; }
-  .legend-cnt { font-size: 11px; color: var(--hint); min-width: 44px; text-align: center; }
-  .legend-pct { font-size: 11px; color: var(--hint); min-width: 34px; text-align: right; }
-
-  /* Config */
-  .config-section { margin-bottom: 18px; }
-  .config-title { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; }
-  .config-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .config-row { display: flex; align-items: center; padding: 12px 14px; border-bottom: 0.5px solid var(--border); gap: 10px; }
-  .config-row:last-child { border-bottom: none; }
-  .config-row label { font-size: 13px; flex: 1; }
-  .config-row input { font-size: 13px; text-align: right; border: none; background: transparent; color: var(--text); width: 170px; }
-  .config-row input:focus { outline: none; }
-  .btn-config { width: 100%; padding: 11px; background: var(--text); color: var(--bg); border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; cursor: pointer; }
-  .btn-config:active { opacity: 0.75; }
-  .btn-danger { background: #c0392b; color: #fff; margin-top: 8px; }
-  .status-msg { font-size: 13px; color: var(--maxime); text-align: center; margin-top: 10px; min-height: 18px; }
-
-  /* Recap modal */
-  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; justify-content: center; }
-  .modal-bg.open { display: flex; }
-  .modal { background: var(--surface); border-radius: var(--radius) var(--radius) 0 0; padding: 20px 18px 32px; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; }
-  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 14px; }
-  .recap-block { margin-bottom: 14px; }
-  .recap-block-title { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-  .recap-line { font-size: 13px; color: var(--text); line-height: 1.7; }
-  .modal-btns { display: flex; gap: 10px; margin-top: 16px; }
-  .btn-modal { flex: 1; padding: 11px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; cursor: pointer; border: 0.5px solid var(--border-md); background: var(--bg); color: var(--text); }
-  .btn-modal.primary { background: var(--text); color: var(--bg); border-color: transparent; }
-  .btn-modal:active { opacity: 0.75; }
+:root{--bg:#f7f6f3;--surface:#ffffff;--border:rgba(0,0,0,0.09);--border-md:rgba(0,0,0,0.16);--text:#1a1a18;--muted:#6b6b68;--hint:#a8a8a5;--anais:#1a6fbf;--anais-bg:#e8f1fb;--maxime:#0d7a5f;--maxime-bg:#e0f4ed;--commun:#b5460e;--commun-bg:#fdeee7;--radius:12px;--radius-sm:8px;}
+@media(prefers-color-scheme:dark){:root{--bg:#141413;--surface:#1e1e1c;--border:rgba(255,255,255,0.08);--border-md:rgba(255,255,255,0.14);--text:#f0efe9;--muted:#9a9a96;--hint:#5a5a57;--anais:#5da0e8;--anais-bg:#1a2e42;--maxime:#3db88a;--maxime-bg:#122e24;--commun:#e07040;--commun-bg:#2e1a0e;}}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{background:var(--bg);font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;color:var(--text);}
+body{max-width:480px;margin:0 auto;}
+.app{display:flex;flex-direction:column;min-height:100dvh;}
+.header{padding:12px 14px 8px;background:var(--surface);border-bottom:0.5px solid var(--border);position:sticky;top:0;z-index:10;}
+.header-row{display:flex;align-items:center;justify-content:space-between;}
+.app-title{font-size:15px;font-weight:600;letter-spacing:-0.3px;}
+.week-nav{display:flex;align-items:center;gap:7px;}
+.week-btn{background:none;border:0.5px solid var(--border-md);border-radius:5px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:14px;}
+.week-btn:active{background:var(--bg);}
+.week-label{font-size:12px;color:var(--muted);min-width:52px;text-align:center;}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--hint);flex-shrink:0;transition:background 0.3s;}
+.sync-dot.synced{background:var(--maxime);}
+.sync-dot.syncing{background:#e8a020;}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:10px 12px;}
+.sum-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 6px;text-align:center;}
+.sum-label{font-size:10px;color:var(--muted);margin-bottom:2px;}
+.sum-value{font-size:19px;font-weight:600;letter-spacing:-0.4px;}
+.sum-sub{font-size:9px;color:var(--hint);margin-top:1px;}
+.sum-card.anais .sum-value{color:var(--anais);}
+.sum-card.maxime .sum-value{color:var(--maxime);}
+.sum-card.commun .sum-value{color:var(--commun);}
+.bar-wrap{padding:0 12px 10px;display:none;}
+.bar-wrap.visible{display:block;}
+.bar-row{display:flex;align-items:center;gap:7px;margin-bottom:4px;}
+.bar-name{font-size:11px;color:var(--muted);width:48px;}
+.bar-track{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;transition:width 0.4s ease;}
+.bar-fill.anais{background:var(--anais);}
+.bar-fill.maxime{background:var(--maxime);}
+.bar-pct{font-size:11px;color:var(--muted);min-width:30px;text-align:right;}
+.tabs{display:flex;background:var(--bg);border-bottom:0.5px solid var(--border);}
+.tab-btn{flex:1;padding:8px 2px;font-size:11px;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-0.5px;white-space:nowrap;}
+.tab-btn.active{color:var(--text);font-weight:600;border-bottom-color:var(--text);}
+.pane{display:none;padding:12px;}
+.pane.active{display:block;}
+.sub-tabs{display:flex;gap:4px;margin-bottom:12px;background:var(--bg);border-radius:var(--radius-sm);padding:3px;border:0.5px solid var(--border);}
+.sub-tab{flex:1;text-align:center;padding:6px 2px;font-size:11px;border-radius:6px;cursor:pointer;color:var(--muted);border:none;background:none;}
+.sub-tab.active{background:var(--surface);color:var(--text);font-weight:600;border:0.5px solid var(--border);}
+.section-sep{border-top:0.5px solid var(--border);margin:10px 0;}
+.form-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:13px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px;}
+.field{display:flex;flex-direction:column;gap:3px;}
+.field label{font-size:11px;color:var(--muted);}
+.field select,.field input{font-size:14px;padding:8px 9px;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);width:100%;-webkit-appearance:none;appearance:none;}
+.field select:focus,.field input:focus{outline:none;border-color:var(--anais);}
+.field-full{margin-bottom:9px;}
+.date-hint{font-size:10px;color:var(--anais);text-align:right;margin-top:2px;min-height:14px;}
+.btn-save{width:100%;padding:11px;background:var(--text);color:var(--bg);border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;margin-top:2px;}
+.btn-save:active{opacity:0.75;}
+.toast{margin-top:8px;background:var(--maxime-bg);border-radius:var(--radius-sm);padding:8px 10px;border:0.5px solid rgba(13,122,95,0.2);display:none;}
+.toast.show{display:block;}
+.toast-title{font-size:11px;font-weight:600;color:var(--maxime);}
+.toast-sub{font-size:10px;color:var(--maxime);margin-top:1px;}
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:10px;}
+.card-title{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.04em;text-transform:uppercase;margin-bottom:8px;}
+.donut-wrap{position:relative;width:140px;height:140px;margin:0 auto 10px;}
+.legend{display:flex;flex-direction:column;gap:6px;}
+.legend-row{display:flex;align-items:center;gap:7px;}
+.legend-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+.legend-name{font-size:11px;color:var(--muted);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.legend-cnt{font-size:11px;color:var(--hint);min-width:20px;text-align:center;}
+.legend-min{font-size:11px;font-weight:500;}
+.legend-pct{font-size:10px;color:var(--hint);min-width:32px;text-align:right;}
+.person-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:10px;}
+.person-hdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px;}
+.person-name{font-size:13px;font-weight:600;}
+.person-name.anais{color:var(--anais);}
+.person-name.maxime{color:var(--maxime);}
+.person-totals{display:flex;gap:12px;}
+.person-tot-val{font-size:16px;font-weight:600;letter-spacing:-0.3px;}
+.person-tot-lbl{font-size:9px;color:var(--hint);}
+.ptask-row{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+.ptask-row:last-child{margin-bottom:0;}
+.ptask-name{font-size:11px;color:var(--muted);width:110px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ptask-track{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden;}
+.ptask-fill{height:100%;border-radius:3px;}
+.ptask-fill.anais{background:var(--anais);}
+.ptask-fill.maxime{background:var(--maxime);}
+.ptask-vals{font-size:10px;color:var(--muted);min-width:64px;text-align:right;white-space:nowrap;}
+.task-breakdown-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:10px;}
+.task-breakdown-row{padding:9px 12px;border-bottom:0.5px solid var(--border);}
+.task-breakdown-row:last-child{border-bottom:none;}
+.task-breakdown-name{font-size:12px;font-weight:500;margin-bottom:6px;}
+.task-who-row{display:flex;align-items:center;gap:6px;margin-bottom:3px;}
+.task-who-row:last-child{margin-bottom:0;}
+.task-who-label{font-size:10px;width:52px;flex-shrink:0;}
+.task-who-label.anais{color:var(--anais);}
+.task-who-label.maxime{color:var(--maxime);}
+.task-who-label.commun{color:var(--commun);}
+.task-who-track{flex:1;height:4px;background:var(--bg);border-radius:2px;overflow:hidden;}
+.task-who-fill{height:100%;border-radius:2px;}
+.task-who-fill.anais{background:var(--anais);}
+.task-who-fill.maxime{background:var(--maxime);}
+.task-who-fill.commun{background:var(--commun);}
+.task-who-vals{font-size:10px;color:var(--muted);min-width:80px;text-align:right;white-space:nowrap;}
+.month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.month-label{font-size:14px;font-weight:600;}
+.month-btn{background:none;border:0.5px solid var(--border-md);border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:14px;}
+.month-btn:active{background:var(--bg);}
+.week-chart-row{display:flex;align-items:center;gap:7px;margin-bottom:6px;}
+.week-chart-lbl{font-size:10px;color:var(--muted);width:46px;flex-shrink:0;}
+.week-chart-bars{flex:1;display:flex;flex-direction:column;gap:2px;}
+.mini-bar-row{display:flex;align-items:center;gap:4px;}
+.mini-bar{height:5px;border-radius:2px;min-width:2px;}
+.mini-val{font-size:9px;color:var(--muted);}
+.range-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px;}
+.range-field label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px;}
+.range-field input{font-size:13px;padding:8px 9px;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);width:100%;-webkit-appearance:none;appearance:none;}
+.range-field input:focus{outline:none;border-color:var(--anais);}
+.btn-calc{width:100%;padding:10px;background:var(--text);color:var(--bg);border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:12px;}
+.btn-calc:active{opacity:0.75;}
+.result-hdr{background:var(--bg);border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:10px;border:0.5px solid var(--border);}
+.result-hdr-txt{font-size:12px;font-weight:600;}
+.result-hdr-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.entries-list{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.entry{display:flex;align-items:center;gap:9px;padding:9px 12px;border-bottom:0.5px solid var(--border);}
+.entry:last-child{border-bottom:none;}
+.avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.avatar.A{background:var(--anais-bg);color:var(--anais);}
+.avatar.M{background:var(--maxime-bg);color:var(--maxime);}
+.avatar.C{background:var(--commun-bg);color:var(--commun);}
+.entry-body{flex:1;min-width:0;}
+.entry-task{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.entry-meta{font-size:10px;color:var(--muted);margin-top:1px;}
+.entry-min{font-size:12px;color:var(--muted);flex-shrink:0;}
+.del-btn{background:none;border:none;cursor:pointer;color:var(--hint);font-size:16px;padding:2px 4px;line-height:1;}
+.del-btn:active{color:#e24b4a;}
+.empty{padding:30px 16px;text-align:center;font-size:13px;color:var(--hint);}
+.config-section{margin-bottom:16px;}
+.config-title{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:7px;}
+.config-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.config-row{display:flex;align-items:center;padding:11px 13px;border-bottom:0.5px solid var(--border);gap:9px;}
+.config-row:last-child{border-bottom:none;}
+.config-row label{font-size:13px;flex:1;}
+.config-row input{font-size:12px;text-align:right;border:none;background:transparent;color:var(--text);width:160px;}
+.config-row input:focus{outline:none;}
+.btn-cfg{width:100%;padding:10px;background:var(--text);color:var(--bg);border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;}
+.btn-cfg:active{opacity:0.75;}
+.btn-danger{background:#c0392b;color:#fff;margin-top:7px;}
+.status-msg{font-size:12px;color:var(--maxime);text-align:center;margin-top:9px;min-height:16px;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:flex-end;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--surface);border-radius:var(--radius) var(--radius) 0 0;padding:18px 16px 28px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;}
+.modal-title{font-size:15px;font-weight:600;margin-bottom:12px;}
+.recap-block{margin-bottom:12px;}
+.recap-block-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px;}
+.recap-line{font-size:12px;color:var(--text);line-height:1.7;}
+.modal-btns{display:flex;gap:9px;margin-top:14px;}
+.btn-modal{flex:1;padding:10px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:0.5px solid var(--border-md);background:var(--bg);color:var(--text);}
+.btn-modal.primary{background:var(--text);color:var(--bg);border-color:transparent;}
+.btn-modal:active{opacity:0.75;}
 </style>
 </head>
 <body>
 <div class="app">
-
   <div class="header">
     <div class="header-row">
-      <div style="display:flex;align-items:center;gap:8px">
+      <div style="display:flex;align-items:center;gap:7px;">
         <span class="app-title">Tâches domestiques</span>
         <div class="sync-dot" id="sync-dot"></div>
       </div>
@@ -208,137 +183,166 @@
   </div>
 
   <div class="summary">
-    <div class="sum-card anais">
-      <div class="sum-label">Anaïs</div>
-      <div class="sum-value" id="tot-anais">0</div>
-      <div class="sum-sub"><span id="cnt-anais">0</span> tâche(s)</div>
-    </div>
-    <div class="sum-card maxime">
-      <div class="sum-label">Maxime</div>
-      <div class="sum-value" id="tot-maxime">0</div>
-      <div class="sum-sub"><span id="cnt-maxime">0</span> tâche(s)</div>
-    </div>
-    <div class="sum-card commun">
-      <div class="sum-label">Commun</div>
-      <div class="sum-value" id="tot-commun">0</div>
-      <div class="sum-sub"><span id="cnt-commun">0</span> tâche(s)</div>
-    </div>
+    <div class="sum-card anais"><div class="sum-label">Anaïs</div><div class="sum-value" id="tot-anais">0</div><div class="sum-sub"><span id="cnt-anais">0</span> tâche(s)</div></div>
+    <div class="sum-card maxime"><div class="sum-label">Maxime</div><div class="sum-value" id="tot-maxime">0</div><div class="sum-sub"><span id="cnt-maxime">0</span> tâche(s)</div></div>
+    <div class="sum-card commun"><div class="sum-label">Commun</div><div class="sum-value" id="tot-commun">0</div><div class="sum-sub"><span id="cnt-commun">0</span> tâche(s)</div></div>
   </div>
-
   <div class="bar-wrap" id="bar-wrap">
-    <div class="bar-row">
-      <span class="bar-name">Anaïs</span>
-      <div class="bar-track"><div class="bar-fill anais" id="bar-a" style="width:0%"></div></div>
-      <span class="bar-pct" id="pct-a">–</span>
-    </div>
-    <div class="bar-row">
-      <span class="bar-name">Maxime</span>
-      <div class="bar-track"><div class="bar-fill maxime" id="bar-m" style="width:0%"></div></div>
-      <span class="bar-pct" id="pct-m">–</span>
-    </div>
+    <div class="bar-row"><span class="bar-name">Anaïs</span><div class="bar-track"><div class="bar-fill anais" id="bar-a" style="width:0%"></div></div><span class="bar-pct" id="pct-a">–</span></div>
+    <div class="bar-row"><span class="bar-name">Maxime</span><div class="bar-track"><div class="bar-fill maxime" id="bar-m" style="width:0%"></div></div><span class="bar-pct" id="pct-m">–</span></div>
   </div>
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="add">Ajouter</button>
     <button class="tab-btn" data-tab="stats">Stats</button>
-    <button class="tab-btn" data-tab="tasks">Par tâche</button>
     <button class="tab-btn" data-tab="history">Historique</button>
     <button class="tab-btn" data-tab="config">Config</button>
   </div>
 
-  <!-- Ajouter -->
+  <!-- AJOUTER -->
   <div class="pane active" id="pane-add">
     <div class="form-card">
       <div class="form-grid">
         <div class="field"><label>Personne</label>
-          <select id="f-who">
-            <option value="Anaïs">Anaïs</option>
-            <option value="Maxime">Maxime</option>
-            <option value="Commun">Commun</option>
-          </select>
+          <select id="f-who"><option value="Anaïs">Anaïs</option><option value="Maxime">Maxime</option><option value="Commun">Commun</option></select>
         </div>
-        <div class="field"><label>Jour</label><input type="date" id="f-date" /></div>
+        <div class="field"><label>Jour</label>
+          <input type="date" id="f-date"/>
+          <div class="date-hint" id="date-hint"></div>
+        </div>
       </div>
       <div class="field-full field"><label>Tâche</label>
         <select id="f-task">
-          <option>Cuisine</option><option>Rangement</option>
-          <option>Machine à laver</option><option>Lave-vaisselle</option>
-          <option>Courses</option><option>Arrosage des plantes</option>
+          <option>Cuisine</option><option>Rangement</option><option>Machine à laver</option>
+          <option>Lave-vaisselle</option><option>Courses</option><option>Arrosage des plantes</option>
           <option>Résolution de tâches pour le commun</option><option>Gestion argent</option><option>Autres</option>
         </select>
       </div>
       <div class="field-full field"><label>Durée (minutes)</label>
-        <input type="number" id="f-min" min="1" max="480" placeholder="ex : 30" inputmode="numeric" />
+        <input type="number" id="f-min" min="1" max="480" placeholder="ex : 30" inputmode="numeric"/>
       </div>
       <button class="btn-save" id="btn-save">Enregistrer</button>
     </div>
+    <div class="toast" id="toast"><div class="toast-title">Entrée enregistrée</div><div class="toast-sub" id="toast-sub"></div></div>
   </div>
 
-  <!-- Stats -->
+  <!-- STATS -->
   <div class="pane" id="pane-stats">
-    <div class="stats-pane-title">Répartition générale</div>
-    <div class="donut-wrap">
-      <div class="donut-canvas-wrap">
-        <canvas id="pieChart" role="img" aria-label="Répartition du temps par type de tâche"></canvas>
+    <div class="sub-tabs">
+      <button class="sub-tab active" data-sub="semaine">Semaine</button>
+      <button class="sub-tab" data-sub="mois">Mois</button>
+      <button class="sub-tab" data-sub="plage">Plage</button>
+    </div>
+
+    <!-- Semaine -->
+    <div id="sub-semaine">
+      <div class="card" id="s-donut-card">
+        <div class="card-title">Répartition générale</div>
+        <div class="donut-wrap"><canvas id="pieChartS" role="img" aria-label="Répartition par tâche — semaine"></canvas></div>
+        <div class="legend" id="legendS"></div>
       </div>
-      <div class="legend" id="pie-legend"></div>
+      <div class="person-card" id="s-card-anais"></div>
+      <div class="person-card" id="s-card-maxime"></div>
+      <div class="card-title" style="margin-bottom:8px;">Répartition par tâche</div>
+      <div id="s-task-breakdown"></div>
     </div>
 
-    <div class="stats-pane-title">Anaïs — détail par tâche</div>
-    <div class="person-card" id="card-anais">
-      <div class="empty" style="color:var(--hint);padding:12px 0">Aucune entrée cette semaine.</div>
+    <!-- Mois -->
+    <div id="sub-mois" style="display:none">
+      <div class="month-nav">
+        <button class="month-btn" id="prev-month">‹</button>
+        <span class="month-label" id="month-label">–</span>
+        <button class="month-btn" id="next-month">›</button>
+      </div>
+      <div class="summary" style="padding:0 0 10px;">
+        <div class="sum-card anais"><div class="sum-label">Anaïs</div><div class="sum-value" id="m-tot-anais" style="font-size:17px">0</div><div class="sum-sub"><span id="m-cnt-anais">0</span> tâche(s)</div></div>
+        <div class="sum-card maxime"><div class="sum-label">Maxime</div><div class="sum-value" id="m-tot-maxime" style="font-size:17px">0</div><div class="sum-sub"><span id="m-cnt-maxime">0</span> tâche(s)</div></div>
+        <div class="sum-card commun"><div class="sum-label">Commun</div><div class="sum-value" id="m-tot-commun" style="font-size:17px">0</div><div class="sum-sub"><span id="m-cnt-commun">0</span> tâche(s)</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Minutes par semaine</div>
+        <div style="display:flex;gap:10px;margin-bottom:7px;flex-wrap:wrap;">
+          <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:var(--anais);display:inline-block"></span>Anaïs</span>
+          <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:var(--maxime);display:inline-block"></span>Maxime</span>
+          <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:var(--commun);display:inline-block"></span>Commun</span>
+        </div>
+        <div id="m-week-bars"></div>
+      </div>
+      <div class="card" id="m-donut-card">
+        <div class="card-title">Répartition générale</div>
+        <div class="donut-wrap"><canvas id="pieChartM" role="img" aria-label="Répartition par tâche — mois"></canvas></div>
+        <div class="legend" id="legendM"></div>
+      </div>
+      <div class="person-card" id="m-card-anais"></div>
+      <div class="person-card" id="m-card-maxime"></div>
+      <div class="card-title" style="margin-bottom:8px;">Répartition par tâche</div>
+      <div id="m-task-breakdown"></div>
     </div>
 
-    <div class="stats-pane-title">Maxime — détail par tâche</div>
-    <div class="person-card" id="card-maxime">
-      <div class="empty" style="color:var(--hint);padding:12px 0">Aucune entrée cette semaine.</div>
+    <!-- Plage -->
+    <div id="sub-plage" style="display:none">
+      <div class="card">
+        <div class="range-row">
+          <div class="range-field"><label>Du</label><input type="date" id="p-from"/></div>
+          <div class="range-field"><label>Au</label><input type="date" id="p-to"/></div>
+        </div>
+        <button class="btn-calc" id="btn-calc">Calculer</button>
+        <div id="plage-result" style="display:none">
+          <div class="result-hdr"><div class="result-hdr-txt" id="p-hdr-txt">–</div><div class="result-hdr-sub" id="p-hdr-sub">–</div></div>
+          <div class="summary" style="padding:0 0 10px;">
+            <div class="sum-card anais"><div class="sum-label">Anaïs</div><div class="sum-value" id="p-tot-anais" style="font-size:17px">0</div><div class="sum-sub"><span id="p-cnt-anais">0</span> tâche(s)</div></div>
+            <div class="sum-card maxime"><div class="sum-label">Maxime</div><div class="sum-value" id="p-tot-maxime" style="font-size:17px">0</div><div class="sum-sub"><span id="p-cnt-maxime">0</span> tâche(s)</div></div>
+            <div class="sum-card commun"><div class="sum-label">Commun</div><div class="sum-value" id="p-tot-commun" style="font-size:17px">0</div><div class="sum-sub"><span id="p-cnt-commun">0</span> tâche(s)</div></div>
+          </div>
+          <div class="bar-wrap visible" style="padding:0 0 10px;">
+            <div class="bar-row"><span class="bar-name">Anaïs</span><div class="bar-track"><div class="bar-fill anais" id="p-bar-a" style="width:0%"></div></div><span class="bar-pct" id="p-pct-a">–</span></div>
+            <div class="bar-row"><span class="bar-name">Maxime</span><div class="bar-track"><div class="bar-fill maxime" id="p-bar-m" style="width:0%"></div></div><span class="bar-pct" id="p-pct-m">–</span></div>
+          </div>
+          <div class="card" id="p-donut-card">
+            <div class="card-title">Répartition générale</div>
+            <div class="donut-wrap"><canvas id="pieChartP" role="img" aria-label="Répartition par tâche — plage"></canvas></div>
+            <div class="legend" id="legendP"></div>
+          </div>
+          <div class="person-card" id="p-card-anais"></div>
+          <div class="person-card" id="p-card-maxime"></div>
+          <div class="card-title" style="margin-bottom:8px;">Répartition par tâche</div>
+          <div id="p-task-breakdown"></div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Par tâche -->
-  <div class="pane" id="pane-tasks">
-    <div class="stats-pane-title">Répartition par tâche</div>
-    <div id="task-breakdown-list">
-      <div class="empty">Aucune entrée cette semaine.</div>
-    </div>
-  </div>
-
-  <!-- Historique -->
+  <!-- HISTORIQUE -->
   <div class="pane" id="pane-history">
-    <div class="entries-list" id="entries-list">
-      <div class="empty">Aucune entrée cette semaine.</div>
-    </div>
+    <div class="entries-list" id="entries-list"><div class="empty">Aucune entrée cette semaine.</div></div>
   </div>
 
-  <!-- Config -->
+  <!-- CONFIG -->
   <div class="pane" id="pane-config">
     <div class="config-section">
       <div class="config-title">Connexion Firebase</div>
       <div class="config-card">
-        <div class="config-row"><label>API Key</label><input id="cfg-apiKey" placeholder="AIza…" /></div>
-        <div class="config-row"><label>Project ID</label><input id="cfg-projectId" placeholder="mon-projet-12345" /></div>
-        <div class="config-row"><label>Database URL</label><input id="cfg-dbUrl" placeholder="https://…-default-rtdb.firebaseio.com" /></div>
+        <div class="config-row"><label>API Key</label><input id="cfg-apiKey" placeholder="AIza…"/></div>
+        <div class="config-row"><label>Project ID</label><input id="cfg-projectId" placeholder="mon-projet-12345"/></div>
+        <div class="config-row"><label>Database URL</label><input id="cfg-dbUrl" placeholder="https://…-default-rtdb.firebaseio.com"/></div>
       </div>
     </div>
     <div class="config-section">
-      <div class="config-title">Récap hebdomadaire (email)</div>
+      <div class="config-title">Récap hebdomadaire</div>
       <div class="config-card">
-        <div class="config-row"><label>Email destinataire</label><input id="cfg-email" type="email" placeholder="vous@exemple.com" /></div>
-        <div class="config-row"><label>Clé EmailJS (Service ID)</label><input id="cfg-ejsService" placeholder="service_xxxxxxx" /></div>
-        <div class="config-row"><label>Template ID EmailJS</label><input id="cfg-ejsTemplate" placeholder="template_xxxxxxx" /></div>
-        <div class="config-row"><label>Public Key EmailJS</label><input id="cfg-ejsKey" placeholder="xxxxxxxxxxxxxxxxxxxx" /></div>
+        <div class="config-row"><label>Email destinataire</label><input id="cfg-email" type="email" placeholder="vous@exemple.com"/></div>
+        <div class="config-row"><label>EmailJS Service ID</label><input id="cfg-ejsService" placeholder="service_xxxxxxx"/></div>
+        <div class="config-row"><label>EmailJS Template ID</label><input id="cfg-ejsTemplate" placeholder="template_xxxxxxx"/></div>
+        <div class="config-row"><label>EmailJS Public Key</label><input id="cfg-ejsKey" placeholder="xxxxxxxxxxxxxxxxxxxx"/></div>
       </div>
-      <p style="font-size:11px;color:var(--hint);margin-top:6px;line-height:1.5">Le récap est généré chaque dimanche soir. Ouvre l'app ce soir-là et appuie sur "Envoyer le récap" — ou active le rappel automatique via EmailJS (voir guide).</p>
     </div>
-    <button class="btn-config" id="btn-connect">Connecter Firebase</button>
-    <button class="btn-config" id="btn-send-recap" style="margin-top:8px;background:var(--anais)">Envoyer le récap maintenant</button>
-    <button class="btn-config btn-danger" id="btn-reset" style="display:none">Déconnecter Firebase</button>
+    <button class="btn-cfg" id="btn-connect">Connecter Firebase</button>
+    <button class="btn-cfg" id="btn-send-recap" style="margin-top:7px;background:var(--anais)">Envoyer le récap maintenant</button>
+    <button class="btn-cfg btn-danger" id="btn-reset" style="display:none">Déconnecter Firebase</button>
     <div class="status-msg" id="cfg-status"></div>
   </div>
-
 </div>
 
-<!-- Modal récap -->
 <div class="modal-bg" id="modal-bg">
   <div class="modal">
     <div class="modal-title" id="modal-title">Récap de la semaine</div>
@@ -353,370 +357,265 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
-(function() {
-  const STORAGE_KEY = 'taches_fb_config';
-  const TASKS = ['Cuisine','Rangement','Machine à laver','Lave-vaisselle','Courses','Arrosage des plantes','Résolution de tâches pour le commun','Gestion argent','Autres'];
-  const TASK_COLORS = { 'Cuisine':'#378ADD','Rangement':'#1D9E75','Machine à laver':'#7F77DD','Lave-vaisselle':'#EF9F27','Courses':'#D85A30','Arrosage des plantes':'#639922','Résolution de tâches pour le commun':'#D4537E','Gestion argent':'#5DCAA5','Autres':'#888780' };
+(function(){
+const STORAGE_KEY='taches_fb_config';
+const TASKS=['Cuisine','Rangement','Machine à laver','Lave-vaisselle','Courses','Arrosage des plantes','Résolution de tâches pour le commun','Gestion argent','Autres'];
+const TASK_COLORS={'Cuisine':'#378ADD','Rangement':'#1D9E75','Machine à laver':'#7F77DD','Lave-vaisselle':'#EF9F27','Courses':'#D85A30','Arrosage des plantes':'#639922','Résolution de tâches pour le commun':'#D4537E','Gestion argent':'#5DCAA5','Autres':'#888780'};
 
-  let db = null, fbApp = null;
-  let currentWeek = isoWeek(new Date()), currentYear = new Date().getFullYear();
-  let allEntries = {}, pieInstance = null;
+let db=null,fbApp=null;
+let currentWeek=isoWeek(new Date()),currentYear=new Date().getFullYear();
+let currentMonth=new Date().getMonth(),currentMonthYear=new Date().getFullYear();
+let allEntries={};
+let pieS=null,pieM=null,pieP=null;
 
-  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+const today=()=>new Date().toISOString().split('T')[0];
+document.getElementById('f-date').value=today();
 
-  function isoWeek(d) {
-    const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    dt.setUTCDate(dt.getUTCDate() + 4 - (dt.getUTCDay() || 7));
-    const y = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1));
-    return Math.ceil((((dt - y) / 86400000) + 1) / 7);
-  }
+function isoWeek(d){const dt=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));dt.setUTCDate(dt.getUTCDate()+4-(dt.getUTCDay()||7));const y=new Date(Date.UTC(dt.getUTCFullYear(),0,1));return Math.ceil((((dt-y)/86400000)+1)/7);}
+function setSyncDot(s){const d=document.getElementById('sync-dot');d.className='sync-dot'+(s==='ok'?' synced':s==='ing'?' syncing':'');}
 
-  function setSyncDot(s) {
-    const d = document.getElementById('sync-dot');
-    d.className = 'sync-dot' + (s==='ok'?' synced':s==='ing'?' syncing':'');
-  }
+function weekEntries(w,y){w=w||currentWeek;y=y||currentYear;return Object.values(allEntries).filter(e=>{const d=new Date(e.date);return isoWeek(d)===w&&d.getFullYear()===y;});}
+function monthEntries(m,y){m=m===undefined?currentMonth:m;y=y||currentMonthYear;return Object.values(allEntries).filter(e=>{const d=new Date(e.date+'T12:00:00');return d.getMonth()===m&&d.getFullYear()===y;});}
+function rangeEntries(from,to){const f=new Date(from+'T00:00:00'),t=new Date(to+'T23:59:59');return Object.values(allEntries).filter(e=>{const d=new Date(e.date+'T12:00:00');return d>=f&&d<=t;});}
 
-  function weekEntries() {
-    return Object.values(allEntries).filter(e => {
-      const d = new Date(e.date);
-      return isoWeek(d) === currentWeek && d.getFullYear() === currentYear;
-    });
-  }
-
-  function calcStats(entries) {
-    const totals = { 'Anaïs':{min:0,cnt:0}, 'Maxime':{min:0,cnt:0}, 'Commun':{min:0,cnt:0} };
-    const byTask = {}; // task -> { Anaïs:{min,cnt}, Maxime:{min,cnt}, Commun:{min,cnt} }
-    entries.forEach(e => {
-      totals[e.who].min += e.min;
-      totals[e.who].cnt += 1;
-      if (!byTask[e.task]) byTask[e.task] = { 'Anaïs':{min:0,cnt:0},'Maxime':{min:0,cnt:0},'Commun':{min:0,cnt:0} };
-      byTask[e.task][e.who].min += e.min;
-      byTask[e.task][e.who].cnt += 1;
-    });
-    return { totals, byTask };
-  }
-
-  function render() {
-    document.getElementById('week-label').textContent = 'sem. ' + currentWeek;
-    const entries = weekEntries();
-    const { totals, byTask } = calcStats(entries);
-
-    ['Anaïs','Maxime','Commun'].forEach(who => {
-      const key = who.toLowerCase().replace('ï','i');
-      document.getElementById('tot-'+key).textContent = totals[who].min;
-      document.getElementById('cnt-'+key).textContent = totals[who].cnt;
-    });
-
-    const personal = totals['Anaïs'].min + totals['Maxime'].min;
-    const bw = document.getElementById('bar-wrap');
-    if (personal > 0) {
-      bw.classList.add('visible');
-      const pA = Math.round(totals['Anaïs'].min / personal * 100);
-      const pM = Math.round(totals['Maxime'].min / personal * 100);
-      document.getElementById('bar-a').style.width = pA + '%';
-      document.getElementById('bar-m').style.width = pM + '%';
-      document.getElementById('pct-a').textContent = pA + '%';
-      document.getElementById('pct-m').textContent = pM + '%';
-    } else bw.classList.remove('visible');
-
-    renderHistory(entries);
-    renderDonut(entries, byTask);
-    renderPersonCard('Anaïs', totals['Anaïs'], byTask);
-    renderPersonCard('Maxime', totals['Maxime'], byTask);
-    renderTaskBreakdown(byTask);
-  }
-
-  function renderHistory(entries) {
-    const list = document.getElementById('entries-list');
-    if (!entries.length) { list.innerHTML = '<div class="empty">Aucune entrée cette semaine.</div>'; return; }
-    const sorted = [...entries].sort((a,b) => b.date.localeCompare(a.date));
-    list.innerHTML = sorted.map(e => {
-      const cls = e.who==='Anaïs'?'A':e.who==='Maxime'?'M':'C';
-      const init = e.who==='Commun'?'Co':e.who[0];
-      const d = new Date(e.date+'T12:00:00');
-      const ds = d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
-      return `<div class="entry">
-        <div class="avatar ${cls}">${init}</div>
-        <div class="entry-body">
-          <div class="entry-task">${e.task}</div>
-          <div class="entry-meta">${e.who} · ${ds}</div>
-        </div>
-        <div class="entry-right">
-          <span class="entry-min">${e.min} min</span>
-        </div>
-        <button class="del-btn" onclick="deleteEntry('${e.id}')">×</button>
-      </div>`;
-    }).join('');
-  }
-
-  function renderDonut(entries, byTask) {
-    const statsEmpty = document.querySelector('#pane-stats .donut-wrap');
-    if (!entries.length) {
-      if (pieInstance) { pieInstance.destroy(); pieInstance = null; }
-      document.getElementById('pie-legend').innerHTML = '<div class="empty" style="padding:8px 0;font-size:13px">Aucune donnée.</div>';
-      return;
-    }
-    const taskTotals = {};
-    entries.forEach(e => { taskTotals[e.task] = (taskTotals[e.task]||0) + e.min; });
-    const taskCounts = {};
-    entries.forEach(e => { taskCounts[e.task] = (taskCounts[e.task]||0) + 1; });
-    const total = Object.values(taskTotals).reduce((a,b)=>a+b,0);
-    const sorted = Object.entries(taskTotals).sort((a,b)=>b[1]-a[1]);
-    const labels = sorted.map(x=>x[0]), data = sorted.map(x=>x[1]);
-    const colors = labels.map(l=>TASK_COLORS[l]||'#888780');
-    if (pieInstance) pieInstance.destroy();
-    pieInstance = new Chart(document.getElementById('pieChart'), {
-      type: 'doughnut',
-      data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#ffffff', hoverOffset: 4 }] },
-      options: { responsive:true, maintainAspectRatio:false, cutout:'55%', plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ` ${ctx.parsed} min (${Math.round(ctx.parsed/total*100)}%)` } } } }
-    });
-    document.getElementById('pie-legend').innerHTML = sorted.map(([task, mins]) => {
-      const pct = Math.round(mins/total*100);
-      const cnt = taskCounts[task]||0;
-      const short = task.length>30?task.slice(0,28)+'…':task;
-      return `<div class="legend-row">
-        <div class="legend-dot" style="background:${TASK_COLORS[task]||'#888'}"></div>
-        <span class="legend-name">${short}</span>
-        <span class="legend-cnt">${cnt}×</span>
-        <span class="legend-min">${mins} min</span>
-        <span class="legend-pct">${pct}%</span>
-      </div>`;
-    }).join('');
-  }
-
-  function renderPersonCard(who, personTotals, byTask) {
-    const cardId = 'card-' + (who==='Anaïs'?'anais':'maxime');
-    const card = document.getElementById(cardId);
-    const cls = who==='Anaïs'?'anais':'maxime';
-    if (!personTotals.min) {
-      card.innerHTML = `<div class="empty" style="color:var(--hint);padding:12px 0;font-size:13px">Aucune entrée cette semaine.</div>`;
-      return;
-    }
-    const taskRows = TASKS.filter(t => byTask[t] && byTask[t][who].min > 0);
-    const maxMin = Math.max(...taskRows.map(t => byTask[t][who].min));
-    card.innerHTML = `
-      <div class="person-card-header">
-        <span class="person-card-name ${cls}">${who}</span>
-        <div class="person-card-totals">
-          <div class="person-total-item">
-            <div class="person-total-val" style="color:var(--${cls})">${personTotals.min}</div>
-            <div class="person-total-lbl">minutes</div>
-          </div>
-          <div class="person-total-item">
-            <div class="person-total-val" style="color:var(--${cls})">${personTotals.cnt}</div>
-            <div class="person-total-lbl">tâches</div>
-          </div>
-        </div>
-      </div>
-      ${taskRows.map(t => {
-        const d = byTask[t][who];
-        const w = Math.round(d.min / maxMin * 100);
-        const short = t.length>22?t.slice(0,20)+'…':t;
-        return `<div class="person-task-row">
-          <span class="person-task-name">${short}</span>
-          <div class="person-task-track"><div class="person-task-fill ${cls}" style="width:${w}%"></div></div>
-          <span class="person-task-vals">${d.min} min · ${d.cnt}×</span>
-        </div>`;
-      }).join('')}`;
-  }
-
-  function renderTaskBreakdown(byTask) {
-    const list = document.getElementById('task-breakdown-list');
-    const activeTasks = TASKS.filter(t => byTask[t]);
-    if (!activeTasks.length) { list.innerHTML = '<div class="empty">Aucune entrée cette semaine.</div>'; return; }
-    list.innerHTML = '<div class="task-breakdown-card">' + activeTasks.map(task => {
-      const d = byTask[task];
-      const totalMin = (d['Anaïs'].min||0) + (d['Maxime'].min||0) + (d['Commun'].min||0);
-      const totalCnt = (d['Anaïs'].cnt||0) + (d['Maxime'].cnt||0) + (d['Commun'].cnt||0);
-      const whos = [['Anaïs','anais'], ['Maxime','maxime'], ['Commun','commun']];
-      return `<div class="task-breakdown-row">
-        <div class="task-breakdown-name">${task} <span style="font-size:11px;color:var(--hint);font-weight:400">— ${totalMin} min · ${totalCnt} fois</span></div>
-        ${whos.map(([who, cls]) => {
-          const md = d[who];
-          if (!md.min && !md.cnt) return '';
-          const w = totalMin > 0 ? Math.round(md.min/totalMin*100) : 0;
-          return `<div class="task-who-row">
-            <span class="task-who-label ${cls}">${who}</span>
-            <div class="task-who-track"><div class="task-who-fill ${cls}" style="width:${w}%"></div></div>
-            <span class="task-who-vals">${md.min} min · ${md.cnt}×</span>
-          </div>`;
-        }).join('')}
-      </div>`;
-    }).join('') + '</div>';
-  }
-
-  /* ---- Récap ---- */
-  function buildRecapText(entries) {
-    const { totals, byTask } = calcStats(entries);
-    const personalTotal = totals['Anaïs'].min + totals['Maxime'].min + totals['Commun'].min;
-    const lines = [];
-    lines.push(`=== Récap semaine ${currentWeek} / ${currentYear} ===\n`);
-    lines.push(`TOTAUX`);
-    lines.push(`Anaïs  : ${totals['Anaïs'].min} min, ${totals['Anaïs'].cnt} tâche(s)`);
-    lines.push(`Maxime : ${totals['Maxime'].min} min, ${totals['Maxime'].cnt} tâche(s)`);
-    lines.push(`Commun : ${totals['Commun'].min} min, ${totals['Commun'].cnt} tâche(s)`);
-    const personal = totals['Anaïs'].min + totals['Maxime'].min;
-    if (personal > 0) {
-      const pA = Math.round(totals['Anaïs'].min/personal*100);
-      lines.push(`Répartition (hors commun) : Anaïs ${pA}% / Maxime ${100-pA}%`);
-    }
-    lines.push(`\nPAR TÂCHE`);
-    const activeTasks = TASKS.filter(t => byTask[t]);
-    activeTasks.forEach(t => {
-      const d = byTask[t];
-      const total = d['Anaïs'].min + d['Maxime'].min + d['Commun'].min;
-      lines.push(`${t} (${total} min) : Anaïs ${d['Anaïs'].min}min×${d['Anaïs'].cnt} | Maxime ${d['Maxime'].min}min×${d['Maxime'].cnt} | Commun ${d['Commun'].min}min×${d['Commun'].cnt}`);
-    });
-    return lines.join('\n');
-  }
-
-  function buildRecapHTML(entries) {
-    const { totals, byTask } = calcStats(entries);
-    const personal = totals['Anaïs'].min + totals['Maxime'].min;
-    const pA = personal > 0 ? Math.round(totals['Anaïs'].min/personal*100) : 0;
-    const activeTasks = TASKS.filter(t => byTask[t]);
-    return `
-      <div class="recap-block">
-        <div class="recap-block-title">Totaux</div>
-        <div class="recap-line">Anaïs : <strong>${totals['Anaïs'].min} min</strong>, ${totals['Anaïs'].cnt} tâche(s)</div>
-        <div class="recap-line">Maxime : <strong>${totals['Maxime'].min} min</strong>, ${totals['Maxime'].cnt} tâche(s)</div>
-        <div class="recap-line">Commun : <strong>${totals['Commun'].min} min</strong>, ${totals['Commun'].cnt} tâche(s)</div>
-        ${personal > 0 ? `<div class="recap-line" style="margin-top:4px;color:var(--muted)">Répartition (hors commun) : Anaïs ${pA}% / Maxime ${100-pA}%</div>` : ''}
-      </div>
-      <div class="recap-block">
-        <div class="recap-block-title">Par tâche</div>
-        ${activeTasks.map(t => {
-          const d = byTask[t];
-          const tot = d['Anaïs'].min + d['Maxime'].min + d['Commun'].min;
-          return `<div class="recap-line"><strong>${t}</strong> — ${tot} min total<br>
-            <span style="color:var(--muted);font-size:12px">Anaïs ${d['Anaïs'].min}min×${d['Anaïs'].cnt} | Maxime ${d['Maxime'].min}min×${d['Maxime'].cnt} | Commun ${d['Commun'].min}min×${d['Commun'].cnt}</span></div>`;
-        }).join('')}
-      </div>`;
-  }
-
-  document.getElementById('btn-send-recap').addEventListener('click', () => {
-    const entries = weekEntries();
-    document.getElementById('modal-title').textContent = `Récap — semaine ${currentWeek}`;
-    document.getElementById('modal-content').innerHTML = entries.length
-      ? buildRecapHTML(entries)
-      : '<div class="empty">Aucune donnée cette semaine.</div>';
-    document.getElementById('modal-bg').classList.add('open');
+function calcStats(entries){
+  const totals={'Anaïs':{min:0,cnt:0},'Maxime':{min:0,cnt:0},'Commun':{min:0,cnt:0}};
+  const byTask={};
+  entries.forEach(e=>{
+    totals[e.who].min+=e.min;totals[e.who].cnt+=1;
+    if(!byTask[e.task])byTask[e.task]={'Anaïs':{min:0,cnt:0},'Maxime':{min:0,cnt:0},'Commun':{min:0,cnt:0}};
+    byTask[e.task][e.who].min+=e.min;byTask[e.task][e.who].cnt+=1;
   });
+  return{totals,byTask};
+}
 
-  document.getElementById('modal-close').addEventListener('click', () => {
-    document.getElementById('modal-bg').classList.remove('open');
-  });
+function render(){
+  document.getElementById('week-label').textContent='sem. '+currentWeek;
+  const entries=weekEntries();
+  const{totals}=calcStats(entries);
+  document.getElementById('tot-anais').textContent=totals['Anaïs'].min;
+  document.getElementById('cnt-anais').textContent=totals['Anaïs'].cnt;
+  document.getElementById('tot-maxime').textContent=totals['Maxime'].min;
+  document.getElementById('cnt-maxime').textContent=totals['Maxime'].cnt;
+  document.getElementById('tot-commun').textContent=totals['Commun'].min;
+  document.getElementById('cnt-commun').textContent=totals['Commun'].cnt;
+  const personal=totals['Anaïs'].min+totals['Maxime'].min;
+  const bw=document.getElementById('bar-wrap');
+  if(personal>0){bw.classList.add('visible');const pA=Math.round(totals['Anaïs'].min/personal*100);const pM=Math.round(totals['Maxime'].min/personal*100);document.getElementById('bar-a').style.width=pA+'%';document.getElementById('bar-m').style.width=pM+'%';document.getElementById('pct-a').textContent=pA+'%';document.getElementById('pct-m').textContent=pM+'%';}else bw.classList.remove('visible');
+  renderHistory(entries);
+  renderSubSemaine(entries);
+}
 
-  document.getElementById('modal-send').addEventListener('click', () => {
-    const entries = weekEntries();
-    const email = document.getElementById('cfg-email').value.trim();
-    const serviceId = document.getElementById('cfg-ejsService').value.trim();
-    const templateId = document.getElementById('cfg-ejsTemplate').value.trim();
-    const pubKey = document.getElementById('cfg-ejsKey').value.trim();
-    if (!email) { document.getElementById('cfg-status').textContent = 'Renseigne un email dans Config.'; document.getElementById('modal-bg').classList.remove('open'); switchTab('config'); return; }
-    if (!serviceId || !templateId || !pubKey) {
-      if (confirm('EmailJS non configuré. Copier le récap dans le presse-papier ?')) {
-        navigator.clipboard.writeText(buildRecapText(entries)).then(() => alert('Copié ! Tu peux le coller dans un email.'));
-      }
-      document.getElementById('modal-bg').classList.remove('open');
-      return;
-    }
-    emailjs.init(pubKey);
-    emailjs.send(serviceId, templateId, {
-      to_email: email,
-      week: `Semaine ${currentWeek} / ${currentYear}`,
-      recap: buildRecapText(entries)
-    }).then(() => {
-      document.getElementById('modal-bg').classList.remove('open');
-      document.getElementById('cfg-status').textContent = 'Récap envoyé !';
-    }).catch(err => {
-      alert('Erreur envoi : ' + JSON.stringify(err));
-    });
-  });
+function renderHistory(entries){
+  const list=document.getElementById('entries-list');
+  if(!entries.length){list.innerHTML='<div class="empty">Aucune entrée cette semaine.</div>';return;}
+  const sorted=[...entries].sort((a,b)=>b.date.localeCompare(a.date));
+  list.innerHTML=sorted.map(e=>{
+    const cls=e.who==='Anaïs'?'A':e.who==='Maxime'?'M':'C';
+    const init=e.who==='Commun'?'Co':e.who[0];
+    const d=new Date(e.date+'T12:00:00');
+    const ds=d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
+    return`<div class="entry"><div class="avatar ${cls}">${init}</div><div class="entry-body"><div class="entry-task">${e.task}</div><div class="entry-meta">${e.who} · ${ds}</div></div><div class="entry-min">${e.min} min</div><button class="del-btn" onclick="deleteEntry('${e.id}')">×</button></div>`;
+  }).join('');
+}
 
-  window.deleteEntry = function(id) {
-    if (!db) { delete allEntries[id]; render(); return; }
-    db.ref('entries/' + id).remove();
-  };
+function renderDonut(canvasId,legendId,entries,instanceRef){
+  if(!entries.length){if(window[instanceRef]){window[instanceRef].destroy();window[instanceRef]=null;}document.getElementById(legendId).innerHTML='<div class="empty" style="padding:6px 0;font-size:12px">Aucune donnée.</div>';return;}
+  const taskTotals={},taskCounts={};
+  entries.forEach(e=>{taskTotals[e.task]=(taskTotals[e.task]||0)+e.min;taskCounts[e.task]=(taskCounts[e.task]||0)+1;});
+  const total=Object.values(taskTotals).reduce((a,b)=>a+b,0);
+  const sorted=Object.entries(taskTotals).sort((a,b)=>b[1]-a[1]);
+  if(window[instanceRef])window[instanceRef].destroy();
+  window[instanceRef]=new Chart(document.getElementById(canvasId),{type:'doughnut',data:{labels:sorted.map(x=>x[0]),datasets:[{data:sorted.map(x=>x[1]),backgroundColor:sorted.map(x=>TASK_COLORS[x[0]]||'#888'),borderWidth:2,borderColor:'#ffffff',hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed} min (${Math.round(ctx.parsed/total*100)}%)`}}}}});
+  document.getElementById(legendId).innerHTML=sorted.map(([task,mins])=>{const pct=Math.round(mins/total*100);const cnt=taskCounts[task]||0;const short=task.length>28?task.slice(0,26)+'…':task;return`<div class="legend-row"><div class="legend-dot" style="background:${TASK_COLORS[task]||'#888'}"></div><span class="legend-name">${short}</span><span class="legend-cnt">${cnt}×</span><span class="legend-min">${mins} min</span><span class="legend-pct">${pct}%</span></div>`;}).join('');
+}
 
-  document.getElementById('btn-save').addEventListener('click', () => {
-    const who = document.getElementById('f-who').value;
-    const date = document.getElementById('f-date').value;
-    const task = document.getElementById('f-task').value;
-    const min = parseInt(document.getElementById('f-min').value);
-    if (!date || !min || min < 1) { document.getElementById('f-min').focus(); return; }
-    const id = Date.now().toString();
-    const entry = { id, who, date, task, min };
-    if (db) {
-      setSyncDot('ing');
-      db.ref('entries/' + id).set(entry).then(() => setSyncDot('ok'));
-    } else {
-      allEntries[id] = entry;
-      const d = new Date(date+'T12:00:00');
-      currentWeek = isoWeek(d); currentYear = d.getFullYear();
-      render();
-    }
-    document.getElementById('f-min').value = '';
-  });
+function renderPersonCard(containerId,who,totals,byTask){
+  const card=document.getElementById(containerId);
+  const cls=who==='Anaïs'?'anais':'maxime';
+  const t=totals[who];
+  if(!t.min){card.innerHTML=`<div class="empty" style="padding:10px 0;font-size:12px">Aucune entrée pour ${who}.</div>`;return;}
+  const taskRows=TASKS.filter(tk=>byTask[tk]&&byTask[tk][who].min>0);
+  const maxMin=Math.max(...taskRows.map(tk=>byTask[tk][who].min));
+  card.innerHTML=`<div class="person-hdr"><span class="person-name ${cls}">${who}</span><div class="person-totals"><div class="person-tot-val" style="color:var(--${cls})">${t.min}<span style="font-size:10px;font-weight:400;color:var(--hint)"> min</span></div><div style="margin-left:8px"><div class="person-tot-val" style="color:var(--${cls})">${t.cnt}<span style="font-size:10px;font-weight:400;color:var(--hint)"> tâches</span></div></div></div></div>${taskRows.map(tk=>{const d=byTask[tk][who];const w=Math.round(d.min/maxMin*100);const short=tk.length>20?tk.slice(0,18)+'…':tk;return`<div class="ptask-row"><span class="ptask-name">${short}</span><div class="ptask-track"><div class="ptask-fill ${cls}" style="width:${w}%"></div></div><span class="ptask-vals">${d.min} min · ${d.cnt}×</span></div>`;}).join('')}`;
+}
 
-  function switchTab(tab) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
-    document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
-    document.getElementById('pane-'+tab).classList.add('active');
+function renderTaskBreakdown(containerId,byTask){
+  const list=document.getElementById(containerId);
+  const activeTasks=TASKS.filter(t=>byTask[t]);
+  if(!activeTasks.length){list.innerHTML='<div class="empty">Aucune donnée.</div>';return;}
+  list.innerHTML='<div class="task-breakdown-card">'+activeTasks.map(task=>{
+    const d=byTask[task];
+    const totalMin=(d['Anaïs'].min||0)+(d['Maxime'].min||0)+(d['Commun'].min||0);
+    const totalCnt=(d['Anaïs'].cnt||0)+(d['Maxime'].cnt||0)+(d['Commun'].cnt||0);
+    return`<div class="task-breakdown-row"><div class="task-breakdown-name">${task} <span style="font-size:10px;color:var(--hint);font-weight:400">— ${totalMin} min · ${totalCnt} fois</span></div>${[['Anaïs','anais'],['Maxime','maxime'],['Commun','commun']].map(([who,cls])=>{const md=d[who];if(!md.min&&!md.cnt)return'';const w=totalMin>0?Math.round(md.min/totalMin*100):0;return`<div class="task-who-row"><span class="task-who-label ${cls}">${who}</span><div class="task-who-track"><div class="task-who-fill ${cls}" style="width:${w}%"></div></div><span class="task-who-vals">${md.min} min · ${md.cnt}×</span></div>`;}).join('')}</div>`;
+  }).join('')+'</div>';
+}
+
+function renderSubSemaine(entries){
+  const{totals,byTask}=calcStats(entries||weekEntries());
+  renderDonut('pieChartS','legendS',entries||weekEntries(),'__pieS');
+  renderPersonCard('s-card-anais','Anaïs',totals,byTask);
+  renderPersonCard('s-card-maxime','Maxime',totals,byTask);
+  renderTaskBreakdown('s-task-breakdown',byTask);
+}
+
+function renderSubMois(){
+  const MOIS=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  document.getElementById('month-label').textContent=MOIS[currentMonth]+' '+currentMonthYear;
+  const entries=monthEntries();
+  const{totals,byTask}=calcStats(entries);
+  document.getElementById('m-tot-anais').textContent=totals['Anaïs'].min;document.getElementById('m-cnt-anais').textContent=totals['Anaïs'].cnt;
+  document.getElementById('m-tot-maxime').textContent=totals['Maxime'].min;document.getElementById('m-cnt-maxime').textContent=totals['Maxime'].cnt;
+  document.getElementById('m-tot-commun').textContent=totals['Commun'].min;document.getElementById('m-cnt-commun').textContent=totals['Commun'].cnt;
+  const weeksInMonth=getWeeksInMonth(currentMonth,currentMonthYear);
+  const barsHtml=weeksInMonth.map(({w,y,label})=>{
+    const we=weekEntries(w,y);const{totals:wt}=calcStats(we);
+    const maxVal=Math.max(wt['Anaïs'].min,wt['Maxime'].min,wt['Commun'].min,1);
+    return`<div class="week-chart-row"><span class="week-chart-lbl">${label}</span><div class="week-chart-bars">${[['Anaïs','anais'],['Maxime','maxime'],['Commun','commun']].map(([who,cls])=>wt[who].min>0?`<div class="mini-bar-row"><div class="mini-bar" style="width:${Math.round(wt[who].min/maxVal*110)}px;background:var(--${cls})"></div><span class="mini-val">${wt[who].min}</span></div>`:'').join('')}</div></div>`;
+  }).join('');
+  document.getElementById('m-week-bars').innerHTML=barsHtml||'<div class="empty" style="font-size:12px;padding:8px 0">Aucune donnée ce mois.</div>';
+  renderDonut('pieChartM','legendM',entries,'__pieM');
+  renderPersonCard('m-card-anais','Anaïs',totals,byTask);
+  renderPersonCard('m-card-maxime','Maxime',totals,byTask);
+  renderTaskBreakdown('m-task-breakdown',byTask);
+}
+
+function getWeeksInMonth(month,year){
+  const weeks=[];const seen=new Set();
+  const d=new Date(year,month,1);
+  while(d.getMonth()===month){
+    const w=isoWeek(d);const y=d.getFullYear();
+    const key=y+'-'+w;
+    if(!seen.has(key)){seen.add(key);const start=new Date(d);const label='Sem. '+w;weeks.push({w,y,label,start});}
+    d.setDate(d.getDate()+7);
   }
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+  return weeks;
+}
 
-  document.getElementById('prev-week').addEventListener('click', () => { currentWeek--; if(currentWeek<1){currentYear--;currentWeek=52;} render(); });
-  document.getElementById('next-week').addEventListener('click', () => { currentWeek++; if(currentWeek>52){currentYear++;currentWeek=1;} render(); });
+function renderSubPlage(){
+  const from=document.getElementById('p-from').value;
+  const to=document.getElementById('p-to').value;
+  if(!from||!to){return;}
+  const entries=rangeEntries(from,to);
+  const{totals,byTask}=calcStats(entries);
+  const fDate=new Date(from+'T12:00:00'),tDate=new Date(to+'T12:00:00');
+  const days=Math.round((tDate-fDate)/86400000)+1;
+  const fmt=d=>d.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('p-hdr-txt').textContent=fmt(fDate)+' → '+fmt(tDate);
+  const totalTasks=totals['Anaïs'].cnt+totals['Maxime'].cnt+totals['Commun'].cnt;
+  const totalMin=totals['Anaïs'].min+totals['Maxime'].min+totals['Commun'].min;
+  document.getElementById('p-hdr-sub').textContent=days+' jour(s) · '+totalTasks+' tâches · '+totalMin+' min';
+  document.getElementById('p-tot-anais').textContent=totals['Anaïs'].min;document.getElementById('p-cnt-anais').textContent=totals['Anaïs'].cnt;
+  document.getElementById('p-tot-maxime').textContent=totals['Maxime'].min;document.getElementById('p-cnt-maxime').textContent=totals['Maxime'].cnt;
+  document.getElementById('p-tot-commun').textContent=totals['Commun'].min;document.getElementById('p-cnt-commun').textContent=totals['Commun'].cnt;
+  const personal=totals['Anaïs'].min+totals['Maxime'].min;
+  if(personal>0){const pA=Math.round(totals['Anaïs'].min/personal*100);document.getElementById('p-bar-a').style.width=pA+'%';document.getElementById('p-bar-m').style.width=(100-pA)+'%';document.getElementById('p-pct-a').textContent=pA+'%';document.getElementById('p-pct-m').textContent=(100-pA)+'%';}
+  renderDonut('pieChartP','legendP',entries,'__pieP');
+  renderPersonCard('p-card-anais','Anaïs',totals,byTask);
+  renderPersonCard('p-card-maxime','Maxime',totals,byTask);
+  renderTaskBreakdown('p-task-breakdown',byTask);
+  document.getElementById('plage-result').style.display='block';
+}
 
-  function connectFirebase(cfg) {
-    try {
-      if (fbApp) { fbApp.delete(); fbApp = null; db = null; }
-      fbApp = firebase.initializeApp({ apiKey:cfg.apiKey, authDomain:cfg.projectId+'.firebaseapp.com', databaseURL:cfg.dbUrl, projectId:cfg.projectId }, 'taches-'+Date.now());
-      db = fbApp.database();
-      setSyncDot('ing');
-      db.ref('entries').on('value', snap => { allEntries = snap.val()||{}; setSyncDot('ok'); render(); });
-      return true;
-    } catch(e) { return false; }
-  }
+document.getElementById('btn-calc').addEventListener('click',renderSubPlage);
 
-  document.getElementById('btn-connect').addEventListener('click', () => {
-    const cfg = { apiKey:document.getElementById('cfg-apiKey').value.trim(), projectId:document.getElementById('cfg-projectId').value.trim(), dbUrl:document.getElementById('cfg-dbUrl').value.trim() };
-    if (!cfg.apiKey||!cfg.projectId||!cfg.dbUrl) { document.getElementById('cfg-status').textContent='Remplis tous les champs Firebase.'; return; }
-    const ok = connectFirebase(cfg);
-    if (ok) {
-      const full = { ...cfg, email:document.getElementById('cfg-email').value.trim(), ejsService:document.getElementById('cfg-ejsService').value.trim(), ejsTemplate:document.getElementById('cfg-ejsTemplate').value.trim(), ejsKey:document.getElementById('cfg-ejsKey').value.trim() };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(full));
-      document.getElementById('cfg-status').textContent='Connecté !';
-      document.getElementById('btn-reset').style.display='block';
-    } else document.getElementById('cfg-status').textContent='Erreur. Vérifie les valeurs Firebase.';
-  });
+document.getElementById('btn-save').addEventListener('click',()=>{
+  const who=document.getElementById('f-who').value;
+  const date=document.getElementById('f-date').value;
+  const task=document.getElementById('f-task').value;
+  const min=parseInt(document.getElementById('f-min').value);
+  if(!date||!min||min<1){document.getElementById('f-min').focus();return;}
+  const id=Date.now().toString();
+  const entry={id,who,date,task,min};
+  if(db){setSyncDot('ing');db.ref('entries/'+id).set(entry).then(()=>setSyncDot('ok'));}
+  else{allEntries[id]=entry;const d=new Date(date+'T12:00:00');currentWeek=isoWeek(d);currentYear=d.getFullYear();render();}
+  document.getElementById('f-min').value='';
+  document.getElementById('f-date').value=today();
+  document.getElementById('date-hint').textContent='↺ remis à aujourd\'hui';
+  setTimeout(()=>document.getElementById('date-hint').textContent='',3000);
+  const t=document.getElementById('toast');
+  document.getElementById('toast-sub').textContent=task+' · '+min+' min · '+who;
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);
+});
 
-  document.getElementById('btn-reset').addEventListener('click', () => {
-    localStorage.removeItem(STORAGE_KEY);
-    if (fbApp) { fbApp.delete(); fbApp=null; db=null; }
-    allEntries={}; render(); setSyncDot('');
-    document.getElementById('cfg-status').textContent='Déconnecté.';
-    document.getElementById('btn-reset').style.display='none';
-    ['cfg-apiKey','cfg-projectId','cfg-dbUrl','cfg-email','cfg-ejsService','cfg-ejsTemplate','cfg-ejsKey'].forEach(id => document.getElementById(id).value='');
-  });
+document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('pane-'+btn.dataset.tab).classList.add('active');
+}));
 
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    try {
-      const cfg = JSON.parse(saved);
-      document.getElementById('cfg-apiKey').value = cfg.apiKey||'';
-      document.getElementById('cfg-projectId').value = cfg.projectId||'';
-      document.getElementById('cfg-dbUrl').value = cfg.dbUrl||'';
-      document.getElementById('cfg-email').value = cfg.email||'';
-      document.getElementById('cfg-ejsService').value = cfg.ejsService||'';
-      document.getElementById('cfg-ejsTemplate').value = cfg.ejsTemplate||'';
-      document.getElementById('cfg-ejsKey').value = cfg.ejsKey||'';
-      document.getElementById('btn-reset').style.display='block';
-      connectFirebase(cfg);
-    } catch(e) {}
-  } else render();
+document.querySelectorAll('.sub-tab').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('.sub-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('sub-semaine').style.display='none';
+  document.getElementById('sub-mois').style.display='none';
+  document.getElementById('sub-plage').style.display='none';
+  document.getElementById('sub-'+btn.dataset.sub).style.display='block';
+  if(btn.dataset.sub==='mois')renderSubMois();
+}));
 
+document.getElementById('prev-week').addEventListener('click',()=>{currentWeek--;if(currentWeek<1){currentYear--;currentWeek=52;}render();});
+document.getElementById('next-week').addEventListener('click',()=>{currentWeek++;if(currentWeek>52){currentYear++;currentWeek=1;}render();});
+document.getElementById('prev-month').addEventListener('click',()=>{currentMonth--;if(currentMonth<0){currentMonth=11;currentMonthYear--;}renderSubMois();});
+document.getElementById('next-month').addEventListener('click',()=>{currentMonth++;if(currentMonth>11){currentMonth=0;currentMonthYear++;}renderSubMois();});
+
+function buildRecapText(entries){
+  const{totals,byTask}=calcStats(entries);
+  const personal=totals['Anaïs'].min+totals['Maxime'].min;
+  const lines=[`=== Récap semaine ${currentWeek} / ${currentYear} ===\n`,'TOTAUX',`Anaïs  : ${totals['Anaïs'].min} min, ${totals['Anaïs'].cnt} tâche(s)`,`Maxime : ${totals['Maxime'].min} min, ${totals['Maxime'].cnt} tâche(s)`,`Commun : ${totals['Commun'].min} min, ${totals['Commun'].cnt} tâche(s)`];
+  if(personal>0){const pA=Math.round(totals['Anaïs'].min/personal*100);lines.push(`Répartition (hors commun) : Anaïs ${pA}% / Maxime ${100-pA}%`);}
+  lines.push('\nPAR TÂCHE');
+  TASKS.filter(t=>byTask[t]).forEach(t=>{const d=byTask[t];const tot=d['Anaïs'].min+d['Maxime'].min+d['Commun'].min;lines.push(`${t} (${tot} min) : Anaïs ${d['Anaïs'].min}min×${d['Anaïs'].cnt} | Maxime ${d['Maxime'].min}min×${d['Maxime'].cnt} | Commun ${d['Commun'].min}min×${d['Commun'].cnt}`);});
+  return lines.join('\n');
+}
+
+document.getElementById('btn-send-recap').addEventListener('click',()=>{
+  const entries=weekEntries();
+  document.getElementById('modal-title').textContent=`Récap — semaine ${currentWeek}`;
+  document.getElementById('modal-content').innerHTML=entries.length?`<div class="recap-block"><div class="recap-block-title">Totaux</div>${['Anaïs','Maxime','Commun'].map(w=>`<div class="recap-line">${w} : <strong>${calcStats(entries).totals[w].min} min</strong>, ${calcStats(entries).totals[w].cnt} tâche(s)</div>`).join('')}</div><div class="recap-block"><div class="recap-block-title">Par tâche</div>${TASKS.filter(t=>calcStats(entries).byTask[t]).map(t=>{const d=calcStats(entries).byTask[t];const tot=d['Anaïs'].min+d['Maxime'].min+d['Commun'].min;return`<div class="recap-line"><strong>${t}</strong> — ${tot} min<br><span style="font-size:11px;color:var(--muted)">Anaïs ${d['Anaïs'].min}min×${d['Anaïs'].cnt} | Maxime ${d['Maxime'].min}min×${d['Maxime'].cnt} | Commun ${d['Commun'].min}min×${d['Commun'].cnt}</span></div>`;}).join('')}</div>`:'<div class="empty">Aucune donnée cette semaine.</div>';
+  document.getElementById('modal-bg').classList.add('open');
+});
+
+document.getElementById('modal-close').addEventListener('click',()=>document.getElementById('modal-bg').classList.remove('open'));
+document.getElementById('modal-send').addEventListener('click',()=>{
+  const entries=weekEntries();
+  const email=document.getElementById('cfg-email').value.trim();
+  const serviceId=document.getElementById('cfg-ejsService').value.trim();
+  const templateId=document.getElementById('cfg-ejsTemplate').value.trim();
+  const pubKey=document.getElementById('cfg-ejsKey').value.trim();
+  if(!email){document.getElementById('cfg-status').textContent='Renseigne un email dans Config.';document.getElementById('modal-bg').classList.remove('open');return;}
+  if(!serviceId||!templateId||!pubKey){if(confirm('EmailJS non configuré. Copier le récap dans le presse-papier ?')){navigator.clipboard.writeText(buildRecapText(entries)).then(()=>alert('Copié !'));}document.getElementById('modal-bg').classList.remove('open');return;}
+  emailjs.init(pubKey);
+  emailjs.send(serviceId,templateId,{to_email:email,week:`Semaine ${currentWeek} / ${currentYear}`,recap:buildRecapText(entries)}).then(()=>{document.getElementById('modal-bg').classList.remove('open');document.getElementById('cfg-status').textContent='Récap envoyé !';}).catch(err=>alert('Erreur : '+JSON.stringify(err)));
+});
+
+window.deleteEntry=function(id){if(!db){delete allEntries[id];render();return;}db.ref('entries/'+id).remove();};
+
+function connectFirebase(cfg){
+  try{if(fbApp){fbApp.delete();fbApp=null;db=null;}fbApp=firebase.initializeApp({apiKey:cfg.apiKey,authDomain:cfg.projectId+'.firebaseapp.com',databaseURL:cfg.dbUrl,projectId:cfg.projectId},'taches-'+Date.now());db=fbApp.database();setSyncDot('ing');db.ref('entries').on('value',snap=>{allEntries=snap.val()||{};setSyncDot('ok');render();});return true;}catch(e){return false;}
+}
+
+document.getElementById('btn-connect').addEventListener('click',()=>{
+  const cfg={apiKey:document.getElementById('cfg-apiKey').value.trim(),projectId:document.getElementById('cfg-projectId').value.trim(),dbUrl:document.getElementById('cfg-dbUrl').value.trim()};
+  if(!cfg.apiKey||!cfg.projectId||!cfg.dbUrl){document.getElementById('cfg-status').textContent='Remplis tous les champs Firebase.';return;}
+  const ok=connectFirebase(cfg);
+  if(ok){const full={...cfg,email:document.getElementById('cfg-email').value.trim(),ejsService:document.getElementById('cfg-ejsService').value.trim(),ejsTemplate:document.getElementById('cfg-ejsTemplate').value.trim(),ejsKey:document.getElementById('cfg-ejsKey').value.trim()};localStorage.setItem(STORAGE_KEY,JSON.stringify(full));document.getElementById('cfg-status').textContent='Connecté !';document.getElementById('btn-reset').style.display='block';}
+  else document.getElementById('cfg-status').textContent='Erreur. Vérifie les valeurs Firebase.';
+});
+
+document.getElementById('btn-reset').addEventListener('click',()=>{
+  localStorage.removeItem(STORAGE_KEY);if(fbApp){fbApp.delete();fbApp=null;db=null;}allEntries={};render();setSyncDot('');
+  document.getElementById('cfg-status').textContent='Déconnecté.';document.getElementById('btn-reset').style.display='none';
+  ['cfg-apiKey','cfg-projectId','cfg-dbUrl','cfg-email','cfg-ejsService','cfg-ejsTemplate','cfg-ejsKey'].forEach(id=>document.getElementById(id).value='');
+});
+
+const saved=localStorage.getItem(STORAGE_KEY);
+if(saved){try{const cfg=JSON.parse(saved);document.getElementById('cfg-apiKey').value=cfg.apiKey||'';document.getElementById('cfg-projectId').value=cfg.projectId||'';document.getElementById('cfg-dbUrl').value=cfg.dbUrl||'';document.getElementById('cfg-email').value=cfg.email||'';document.getElementById('cfg-ejsService').value=cfg.ejsService||'';document.getElementById('cfg-ejsTemplate').value=cfg.ejsTemplate||'';document.getElementById('cfg-ejsKey').value=cfg.ejsKey||'';document.getElementById('btn-reset').style.display='block';connectFirebase(cfg);}catch(e){}}
+else render();
+
+const now=new Date();document.getElementById('p-from').value=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0];document.getElementById('p-to').value=now.toISOString().split('T')[0];
 })();
 </script>
 </body>
