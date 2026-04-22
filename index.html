@@ -10,8 +10,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
-:root{--bg:#f7f6f3;--surface:#ffffff;--border:rgba(0,0,0,0.09);--border-md:rgba(0,0,0,0.16);--text:#1a1a18;--muted:#6b6b68;--hint:#a8a8a5;--anais:#1a6fbf;--anais-bg:#e8f1fb;--maxime:#0d7a5f;--maxime-bg:#e0f4ed;--commun:#b5460e;--commun-bg:#fdeee7;--radius:12px;--radius-sm:8px;}
-@media(prefers-color-scheme:dark){:root{--bg:#141413;--surface:#1e1e1c;--border:rgba(255,255,255,0.08);--border-md:rgba(255,255,255,0.14);--text:#f0efe9;--muted:#9a9a96;--hint:#5a5a57;--anais:#5da0e8;--anais-bg:#1a2e42;--maxime:#3db88a;--maxime-bg:#122e24;--commun:#e07040;--commun-bg:#2e1a0e;}}
+:root{--bg:#f7f6f3;--surface:#ffffff;--border:rgba(0,0,0,0.09);--border-md:rgba(0,0,0,0.16);--text:#1a1a18;--muted:#6b6b68;--hint:#a8a8a5;--anais:#1a6fbf;--anais-bg:#e8f1fb;--maxime:#0d7a5f;--maxime-bg:#e0f4ed;--radius:12px;--radius-sm:8px;}
+@media(prefers-color-scheme:dark){:root{--bg:#141413;--surface:#1e1e1c;--border:rgba(255,255,255,0.08);--border-md:rgba(255,255,255,0.14);--text:#f0efe9;--muted:#9a9a96;--hint:#5a5a57;--anais:#5da0e8;--anais-bg:#1a2e42;--maxime:#3db88a;--maxime-bg:#122e24;}}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{background:var(--bg);font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;color:var(--text);}
 body{max-width:480px;margin:0 auto;}
@@ -26,14 +26,13 @@ body{max-width:480px;margin:0 auto;}
 .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--hint);flex-shrink:0;transition:background 0.3s;}
 .sync-dot.synced{background:var(--maxime);}
 .sync-dot.syncing{background:#e8a020;}
-.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:10px 12px;}
+.summary{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px 12px;}
 .sum-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 6px;text-align:center;}
 .sum-label{font-size:10px;color:var(--muted);margin-bottom:2px;}
 .sum-value{font-size:19px;font-weight:600;letter-spacing:-0.4px;}
 .sum-sub{font-size:9px;color:var(--hint);margin-top:1px;}
 .sum-card.anais .sum-value{color:var(--anais);}
 .sum-card.maxime .sum-value{color:var(--maxime);}
-.sum-card.commun .sum-value{color:var(--commun);}
 .bar-wrap{padding:0 12px 10px;display:none;}
 .bar-wrap.visible{display:block;}
 .bar-row{display:flex;align-items:center;gap:7px;margin-bottom:4px;}
@@ -51,7 +50,21 @@ body{max-width:480px;margin:0 auto;}
 .sub-tabs{display:flex;gap:4px;margin-bottom:12px;background:var(--bg);border-radius:var(--radius-sm);padding:3px;border:0.5px solid var(--border);}
 .sub-tab{flex:1;text-align:center;padding:6px 2px;font-size:11px;border-radius:6px;cursor:pointer;color:var(--muted);border:none;background:none;}
 .sub-tab.active{background:var(--surface);color:var(--text);font-weight:600;border:0.5px solid var(--border);}
-.section-sep{border-top:0.5px solid var(--border);margin:10px 0;}
+.week-hdr{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.week-hdr-info{flex:1;}
+.week-hdr-title{font-size:12px;font-weight:600;}
+.week-hdr-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.week-hdr-nav{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.week-hdr-btn{background:none;border:0.5px solid var(--border-md);border-radius:4px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:12px;}
+.week-hdr-btn:active{background:var(--bg);}
+.pct-bar-wrap{margin-bottom:10px;}
+.pct-bar-row{display:flex;align-items:center;gap:7px;margin-bottom:4px;}
+.pct-bar-name{font-size:11px;color:var(--muted);width:48px;}
+.pct-bar-track{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+.pct-bar-fill{height:100%;border-radius:3px;}
+.pct-bar-fill.anais{background:var(--anais);}
+.pct-bar-fill.maxime{background:var(--maxime);}
+.pct-bar-val{font-size:11px;color:var(--muted);min-width:30px;text-align:right;}
 .form-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:13px;}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px;}
 .field{display:flex;flex-direction:column;gap:3px;}
@@ -101,12 +114,10 @@ body{max-width:480px;margin:0 auto;}
 .task-who-label{font-size:10px;width:52px;flex-shrink:0;}
 .task-who-label.anais{color:var(--anais);}
 .task-who-label.maxime{color:var(--maxime);}
-.task-who-label.commun{color:var(--commun);}
 .task-who-track{flex:1;height:4px;background:var(--bg);border-radius:2px;overflow:hidden;}
 .task-who-fill{height:100%;border-radius:2px;}
 .task-who-fill.anais{background:var(--anais);}
 .task-who-fill.maxime{background:var(--maxime);}
-.task-who-fill.commun{background:var(--commun);}
 .task-who-vals{font-size:10px;color:var(--muted);min-width:80px;text-align:right;white-space:nowrap;}
 .month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 .month-label{font-size:14px;font-weight:600;}
@@ -133,7 +144,6 @@ body{max-width:480px;margin:0 auto;}
 .avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
 .avatar.A{background:var(--anais-bg);color:var(--anais);}
 .avatar.M{background:var(--maxime-bg);color:var(--maxime);}
-.avatar.C{background:var(--commun-bg);color:var(--commun);}
 .entry-body{flex:1;min-width:0;}
 .entry-task{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .entry-meta{font-size:10px;color:var(--muted);margin-top:1px;}
@@ -185,7 +195,6 @@ body{max-width:480px;margin:0 auto;}
   <div class="summary">
     <div class="sum-card anais"><div class="sum-label">Anaïs</div><div class="sum-value" id="tot-anais">0</div><div class="sum-sub"><span id="cnt-anais">0</span> tâche(s)</div></div>
     <div class="sum-card maxime"><div class="sum-label">Maxime</div><div class="sum-value" id="tot-maxime">0</div><div class="sum-sub"><span id="cnt-maxime">0</span> tâche(s)</div></div>
-    <div class="sum-card commun"><div class="sum-label">Commun</div><div class="sum-value" id="tot-commun">0</div><div class="sum-sub"><span id="cnt-commun">0</span> tâche(s)</div></div>
   </div>
   <div class="bar-wrap" id="bar-wrap">
     <div class="bar-row"><span class="bar-name">Anaïs</span><div class="bar-track"><div class="bar-fill anais" id="bar-a" style="width:0%"></div></div><span class="bar-pct" id="pct-a">–</span></div>
@@ -204,7 +213,7 @@ body{max-width:480px;margin:0 auto;}
     <div class="form-card">
       <div class="form-grid">
         <div class="field"><label>Personne</label>
-          <select id="f-who"><option value="Anaïs">Anaïs</option><option value="Maxime">Maxime</option><option value="Commun">Commun</option></select>
+          <select id="f-who"><option value="Anaïs">Anaïs</option><option value="Maxime">Maxime</option></select>
         </div>
         <div class="field"><label>Jour</label>
           <input type="date" id="f-date"/>
@@ -236,8 +245,22 @@ body{max-width:480px;margin:0 auto;}
 
     <!-- Semaine -->
     <div id="sub-semaine">
+      <div class="week-hdr">
+        <div class="week-hdr-info">
+          <div class="week-hdr-title" id="s-week-title">–</div>
+          <div class="week-hdr-sub" id="s-week-sub">–</div>
+        </div>
+        <div class="week-hdr-nav">
+          <button class="week-hdr-btn" id="s-prev-week">‹</button>
+          <button class="week-hdr-btn" id="s-next-week">›</button>
+        </div>
+      </div>
+      <div class="pct-bar-wrap" id="s-pct-bar" style="display:none">
+        <div class="pct-bar-row"><span class="pct-bar-name">Anaïs</span><div class="pct-bar-track"><div class="pct-bar-fill anais" id="s-pct-a" style="width:0%"></div></div><span class="pct-bar-val" id="s-pct-av">–</span></div>
+        <div class="pct-bar-row"><span class="pct-bar-name">Maxime</span><div class="pct-bar-track"><div class="pct-bar-fill maxime" id="s-pct-m" style="width:0%"></div></div><span class="pct-bar-val" id="s-pct-mv">–</span></div>
+      </div>
       <div class="card" id="s-donut-card">
-        <div class="card-title">Répartition générale</div>
+        <div class="card-title">Répartition par tâche</div>
         <div class="donut-wrap"><canvas id="pieChartS" role="img" aria-label="Répartition par tâche — semaine"></canvas></div>
         <div class="legend" id="legendS"></div>
       </div>
@@ -257,19 +280,21 @@ body{max-width:480px;margin:0 auto;}
       <div class="summary" style="padding:0 0 10px;">
         <div class="sum-card anais"><div class="sum-label">Anaïs</div><div class="sum-value" id="m-tot-anais" style="font-size:17px">0</div><div class="sum-sub"><span id="m-cnt-anais">0</span> tâche(s)</div></div>
         <div class="sum-card maxime"><div class="sum-label">Maxime</div><div class="sum-value" id="m-tot-maxime" style="font-size:17px">0</div><div class="sum-sub"><span id="m-cnt-maxime">0</span> tâche(s)</div></div>
-        <div class="sum-card commun"><div class="sum-label">Commun</div><div class="sum-value" id="m-tot-commun" style="font-size:17px">0</div><div class="sum-sub"><span id="m-cnt-commun">0</span> tâche(s)</div></div>
+      </div>
+      <div class="pct-bar-wrap" id="m-pct-bar" style="display:none">
+        <div class="pct-bar-row"><span class="pct-bar-name">Anaïs</span><div class="pct-bar-track"><div class="pct-bar-fill anais" id="m-pct-a" style="width:0%"></div></div><span class="pct-bar-val" id="m-pct-av">–</span></div>
+        <div class="pct-bar-row"><span class="pct-bar-name">Maxime</span><div class="pct-bar-track"><div class="pct-bar-fill maxime" id="m-pct-m" style="width:0%"></div></div><span class="pct-bar-val" id="m-pct-mv">–</span></div>
       </div>
       <div class="card">
-        <div class="card-title">Minutes par semaine</div>
+        <div class="card-title">4 dernières semaines</div>
         <div style="display:flex;gap:10px;margin-bottom:7px;flex-wrap:wrap;">
           <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:var(--anais);display:inline-block"></span>Anaïs</span>
           <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:var(--maxime);display:inline-block"></span>Maxime</span>
-          <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:var(--commun);display:inline-block"></span>Commun</span>
         </div>
         <div id="m-week-bars"></div>
       </div>
       <div class="card" id="m-donut-card">
-        <div class="card-title">Répartition générale</div>
+        <div class="card-title">Répartition par tâche</div>
         <div class="donut-wrap"><canvas id="pieChartM" role="img" aria-label="Répartition par tâche — mois"></canvas></div>
         <div class="legend" id="legendM"></div>
       </div>
@@ -292,14 +317,13 @@ body{max-width:480px;margin:0 auto;}
           <div class="summary" style="padding:0 0 10px;">
             <div class="sum-card anais"><div class="sum-label">Anaïs</div><div class="sum-value" id="p-tot-anais" style="font-size:17px">0</div><div class="sum-sub"><span id="p-cnt-anais">0</span> tâche(s)</div></div>
             <div class="sum-card maxime"><div class="sum-label">Maxime</div><div class="sum-value" id="p-tot-maxime" style="font-size:17px">0</div><div class="sum-sub"><span id="p-cnt-maxime">0</span> tâche(s)</div></div>
-            <div class="sum-card commun"><div class="sum-label">Commun</div><div class="sum-value" id="p-tot-commun" style="font-size:17px">0</div><div class="sum-sub"><span id="p-cnt-commun">0</span> tâche(s)</div></div>
           </div>
-          <div class="bar-wrap visible" style="padding:0 0 10px;">
-            <div class="bar-row"><span class="bar-name">Anaïs</span><div class="bar-track"><div class="bar-fill anais" id="p-bar-a" style="width:0%"></div></div><span class="bar-pct" id="p-pct-a">–</span></div>
-            <div class="bar-row"><span class="bar-name">Maxime</span><div class="bar-track"><div class="bar-fill maxime" id="p-bar-m" style="width:0%"></div></div><span class="bar-pct" id="p-pct-m">–</span></div>
+          <div class="pct-bar-wrap" id="p-pct-bar" style="display:none">
+            <div class="pct-bar-row"><span class="pct-bar-name">Anaïs</span><div class="pct-bar-track"><div class="pct-bar-fill anais" id="p-pct-a" style="width:0%"></div></div><span class="pct-bar-val" id="p-pct-av">–</span></div>
+            <div class="pct-bar-row"><span class="pct-bar-name">Maxime</span><div class="pct-bar-track"><div class="pct-bar-fill maxime" id="p-pct-m" style="width:0%"></div></div><span class="pct-bar-val" id="p-pct-mv">–</span></div>
           </div>
           <div class="card" id="p-donut-card">
-            <div class="card-title">Répartition générale</div>
+            <div class="card-title">Répartition par tâche</div>
             <div class="donut-wrap"><canvas id="pieChartP" role="img" aria-label="Répartition par tâche — plage"></canvas></div>
             <div class="legend" id="legendP"></div>
           </div>
@@ -314,6 +338,12 @@ body{max-width:480px;margin:0 auto;}
 
   <!-- HISTORIQUE -->
   <div class="pane" id="pane-history">
+    <div class="week-hdr" style="margin-bottom:10px;">
+      <div class="week-hdr-info">
+        <div class="week-hdr-title" id="h-week-title">–</div>
+        <div class="week-hdr-sub" id="h-week-sub">–</div>
+      </div>
+    </div>
     <div class="entries-list" id="entries-list"><div class="empty">Aucune entrée cette semaine.</div></div>
   </div>
 
@@ -361,49 +391,83 @@ body{max-width:480px;margin:0 auto;}
 const STORAGE_KEY='taches_fb_config';
 const TASKS=['Cuisine','Rangement','Machine à laver','Lave-vaisselle','Courses','Arrosage des plantes','Résolution de tâches pour le commun','Gestion argent','Autres'];
 const TASK_COLORS={'Cuisine':'#378ADD','Rangement':'#1D9E75','Machine à laver':'#7F77DD','Lave-vaisselle':'#EF9F27','Courses':'#D85A30','Arrosage des plantes':'#639922','Résolution de tâches pour le commun':'#D4537E','Gestion argent':'#5DCAA5','Autres':'#888780'};
+const MOIS=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
 let db=null,fbApp=null;
 let currentWeek=isoWeek(new Date()),currentYear=new Date().getFullYear();
+let statsWeek=isoWeek(new Date()),statsYear=new Date().getFullYear();
 let currentMonth=new Date().getMonth(),currentMonthYear=new Date().getFullYear();
 let allEntries={};
-let pieS=null,pieM=null,pieP=null;
 
 const today=()=>new Date().toISOString().split('T')[0];
 document.getElementById('f-date').value=today();
 
 function isoWeek(d){const dt=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));dt.setUTCDate(dt.getUTCDate()+4-(dt.getUTCDay()||7));const y=new Date(Date.UTC(dt.getUTCFullYear(),0,1));return Math.ceil((((dt-y)/86400000)+1)/7);}
+
+function weekBounds(week,year){
+  const jan4=new Date(Date.UTC(year,0,4));
+  const startOfWeek1=new Date(jan4);
+  startOfWeek1.setUTCDate(jan4.getUTCDate()-(jan4.getUTCDay()||7)+1);
+  const mon=new Date(startOfWeek1);
+  mon.setUTCDate(startOfWeek1.getUTCDate()+(week-1)*7);
+  const sun=new Date(mon);sun.setUTCDate(mon.getUTCDate()+6);
+  return{mon,sun};
+}
+
+function fmtDate(d){return d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});}
+function fmtDateShort(d){return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short',timeZone:'UTC'});}
+
 function setSyncDot(s){const d=document.getElementById('sync-dot');d.className='sync-dot'+(s==='ok'?' synced':s==='ing'?' syncing':'');}
 
-function weekEntries(w,y){w=w||currentWeek;y=y||currentYear;return Object.values(allEntries).filter(e=>{const d=new Date(e.date);return isoWeek(d)===w&&d.getFullYear()===y;});}
-function monthEntries(m,y){m=m===undefined?currentMonth:m;y=y||currentMonthYear;return Object.values(allEntries).filter(e=>{const d=new Date(e.date+'T12:00:00');return d.getMonth()===m&&d.getFullYear()===y;});}
+function filterEntries(week,year){return Object.values(allEntries).filter(e=>{const d=new Date(e.date);return isoWeek(d)===week&&d.getFullYear()===year;});}
+function monthEntries(m,y){return Object.values(allEntries).filter(e=>{const d=new Date(e.date+'T12:00:00');return d.getMonth()===m&&d.getFullYear()===y;});}
 function rangeEntries(from,to){const f=new Date(from+'T00:00:00'),t=new Date(to+'T23:59:59');return Object.values(allEntries).filter(e=>{const d=new Date(e.date+'T12:00:00');return d>=f&&d<=t;});}
 
 function calcStats(entries){
-  const totals={'Anaïs':{min:0,cnt:0},'Maxime':{min:0,cnt:0},'Commun':{min:0,cnt:0}};
+  const totals={'Anaïs':{min:0,cnt:0},'Maxime':{min:0,cnt:0}};
   const byTask={};
   entries.forEach(e=>{
-    totals[e.who].min+=e.min;totals[e.who].cnt+=1;
-    if(!byTask[e.task])byTask[e.task]={'Anaïs':{min:0,cnt:0},'Maxime':{min:0,cnt:0},'Commun':{min:0,cnt:0}};
-    byTask[e.task][e.who].min+=e.min;byTask[e.task][e.who].cnt+=1;
+    if(totals[e.who])totals[e.who].min+=e.min,totals[e.who].cnt+=1;
+    if(!byTask[e.task])byTask[e.task]={'Anaïs':{min:0,cnt:0},'Maxime':{min:0,cnt:0}};
+    if(byTask[e.task][e.who])byTask[e.task][e.who].min+=e.min,byTask[e.task][e.who].cnt+=1;
   });
   return{totals,byTask};
 }
 
+function renderPctBar(wrapId,fillAId,fillMId,valAId,valMId,totals){
+  const personal=totals['Anaïs'].min+totals['Maxime'].min;
+  const wrap=document.getElementById(wrapId);
+  if(personal>0){
+    wrap.style.display='block';
+    const pA=Math.round(totals['Anaïs'].min/personal*100);
+    const pM=100-pA;
+    document.getElementById(fillAId).style.width=pA+'%';
+    document.getElementById(fillMId).style.width=pM+'%';
+    document.getElementById(valAId).textContent=pA+'%';
+    document.getElementById(valMId).textContent=pM+'%';
+  }else wrap.style.display='none';
+}
+
 function render(){
   document.getElementById('week-label').textContent='sem. '+currentWeek;
-  const entries=weekEntries();
+  const entries=filterEntries(currentWeek,currentYear);
   const{totals}=calcStats(entries);
   document.getElementById('tot-anais').textContent=totals['Anaïs'].min;
   document.getElementById('cnt-anais').textContent=totals['Anaïs'].cnt;
   document.getElementById('tot-maxime').textContent=totals['Maxime'].min;
   document.getElementById('cnt-maxime').textContent=totals['Maxime'].cnt;
-  document.getElementById('tot-commun').textContent=totals['Commun'].min;
-  document.getElementById('cnt-commun').textContent=totals['Commun'].cnt;
   const personal=totals['Anaïs'].min+totals['Maxime'].min;
   const bw=document.getElementById('bar-wrap');
-  if(personal>0){bw.classList.add('visible');const pA=Math.round(totals['Anaïs'].min/personal*100);const pM=Math.round(totals['Maxime'].min/personal*100);document.getElementById('bar-a').style.width=pA+'%';document.getElementById('bar-m').style.width=pM+'%';document.getElementById('pct-a').textContent=pA+'%';document.getElementById('pct-m').textContent=pM+'%';}else bw.classList.remove('visible');
+  if(personal>0){bw.classList.add('visible');const pA=Math.round(totals['Anaïs'].min/personal*100);document.getElementById('bar-a').style.width=pA+'%';document.getElementById('bar-m').style.width=(100-pA)+'%';document.getElementById('pct-a').textContent=pA+'%';document.getElementById('pct-m').textContent=(100-pA)+'%';}
+  else bw.classList.remove('visible');
+  updateWeekHdr('h-week-title','h-week-sub',currentWeek,currentYear);
   renderHistory(entries);
-  renderSubSemaine(entries);
+}
+
+function updateWeekHdr(titleId,subId,week,year){
+  const{mon,sun}=weekBounds(week,year);
+  document.getElementById(titleId).textContent='Semaine '+week;
+  document.getElementById(subId).textContent=fmtDateShort(mon)+' → '+fmtDate(sun);
 }
 
 function renderHistory(entries){
@@ -411,22 +475,21 @@ function renderHistory(entries){
   if(!entries.length){list.innerHTML='<div class="empty">Aucune entrée cette semaine.</div>';return;}
   const sorted=[...entries].sort((a,b)=>b.date.localeCompare(a.date));
   list.innerHTML=sorted.map(e=>{
-    const cls=e.who==='Anaïs'?'A':e.who==='Maxime'?'M':'C';
-    const init=e.who==='Commun'?'Co':e.who[0];
+    const cls=e.who==='Anaïs'?'A':'M';
     const d=new Date(e.date+'T12:00:00');
     const ds=d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
-    return`<div class="entry"><div class="avatar ${cls}">${init}</div><div class="entry-body"><div class="entry-task">${e.task}</div><div class="entry-meta">${e.who} · ${ds}</div></div><div class="entry-min">${e.min} min</div><button class="del-btn" onclick="deleteEntry('${e.id}')">×</button></div>`;
+    return`<div class="entry"><div class="avatar ${cls}">${e.who[0]}</div><div class="entry-body"><div class="entry-task">${e.task}</div><div class="entry-meta">${e.who} · ${ds}</div></div><div class="entry-min">${e.min} min</div><button class="del-btn" onclick="deleteEntry('${e.id}')">×</button></div>`;
   }).join('');
 }
 
-function renderDonut(canvasId,legendId,entries,instanceRef){
-  if(!entries.length){if(window[instanceRef]){window[instanceRef].destroy();window[instanceRef]=null;}document.getElementById(legendId).innerHTML='<div class="empty" style="padding:6px 0;font-size:12px">Aucune donnée.</div>';return;}
+function renderDonut(canvasId,legendId,entries,instanceKey){
+  if(!entries.length){if(window[instanceKey]){window[instanceKey].destroy();window[instanceKey]=null;}document.getElementById(legendId).innerHTML='<div class="empty" style="padding:6px 0;font-size:12px">Aucune donnée.</div>';return;}
   const taskTotals={},taskCounts={};
   entries.forEach(e=>{taskTotals[e.task]=(taskTotals[e.task]||0)+e.min;taskCounts[e.task]=(taskCounts[e.task]||0)+1;});
   const total=Object.values(taskTotals).reduce((a,b)=>a+b,0);
   const sorted=Object.entries(taskTotals).sort((a,b)=>b[1]-a[1]);
-  if(window[instanceRef])window[instanceRef].destroy();
-  window[instanceRef]=new Chart(document.getElementById(canvasId),{type:'doughnut',data:{labels:sorted.map(x=>x[0]),datasets:[{data:sorted.map(x=>x[1]),backgroundColor:sorted.map(x=>TASK_COLORS[x[0]]||'#888'),borderWidth:2,borderColor:'#ffffff',hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed} min (${Math.round(ctx.parsed/total*100)}%)`}}}}});
+  if(window[instanceKey])window[instanceKey].destroy();
+  window[instanceKey]=new Chart(document.getElementById(canvasId),{type:'doughnut',data:{labels:sorted.map(x=>x[0]),datasets:[{data:sorted.map(x=>x[1]),backgroundColor:sorted.map(x=>TASK_COLORS[x[0]]||'#888'),borderWidth:2,borderColor:'#ffffff',hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed} min (${Math.round(ctx.parsed/total*100)}%)`}}}}});
   document.getElementById(legendId).innerHTML=sorted.map(([task,mins])=>{const pct=Math.round(mins/total*100);const cnt=taskCounts[task]||0;const short=task.length>28?task.slice(0,26)+'…':task;return`<div class="legend-row"><div class="legend-dot" style="background:${TASK_COLORS[task]||'#888'}"></div><span class="legend-name">${short}</span><span class="legend-cnt">${cnt}×</span><span class="legend-min">${mins} min</span><span class="legend-pct">${pct}%</span></div>`;}).join('');
 }
 
@@ -434,10 +497,10 @@ function renderPersonCard(containerId,who,totals,byTask){
   const card=document.getElementById(containerId);
   const cls=who==='Anaïs'?'anais':'maxime';
   const t=totals[who];
-  if(!t.min){card.innerHTML=`<div class="empty" style="padding:10px 0;font-size:12px">Aucune entrée pour ${who}.</div>`;return;}
-  const taskRows=TASKS.filter(tk=>byTask[tk]&&byTask[tk][who].min>0);
+  if(!t||!t.min){card.innerHTML=`<div class="empty" style="padding:10px 0;font-size:12px">Aucune entrée pour ${who}.</div>`;return;}
+  const taskRows=TASKS.filter(tk=>byTask[tk]&&byTask[tk][who]&&byTask[tk][who].min>0);
   const maxMin=Math.max(...taskRows.map(tk=>byTask[tk][who].min));
-  card.innerHTML=`<div class="person-hdr"><span class="person-name ${cls}">${who}</span><div class="person-totals"><div class="person-tot-val" style="color:var(--${cls})">${t.min}<span style="font-size:10px;font-weight:400;color:var(--hint)"> min</span></div><div style="margin-left:8px"><div class="person-tot-val" style="color:var(--${cls})">${t.cnt}<span style="font-size:10px;font-weight:400;color:var(--hint)"> tâches</span></div></div></div></div>${taskRows.map(tk=>{const d=byTask[tk][who];const w=Math.round(d.min/maxMin*100);const short=tk.length>20?tk.slice(0,18)+'…':tk;return`<div class="ptask-row"><span class="ptask-name">${short}</span><div class="ptask-track"><div class="ptask-fill ${cls}" style="width:${w}%"></div></div><span class="ptask-vals">${d.min} min · ${d.cnt}×</span></div>`;}).join('')}`;
+  card.innerHTML=`<div class="person-hdr"><span class="person-name ${cls}">${who}</span><div class="person-totals"><div><div class="person-tot-val" style="color:var(--${cls})">${t.min}<span style="font-size:10px;font-weight:400;color:var(--hint)"> min</span></div></div><div style="margin-left:8px"><div class="person-tot-val" style="color:var(--${cls})">${t.cnt}<span style="font-size:10px;font-weight:400;color:var(--hint)"> tâches</span></div></div></div></div>${taskRows.map(tk=>{const d=byTask[tk][who];const w=Math.round(d.min/maxMin*100);const short=tk.length>20?tk.slice(0,18)+'…':tk;return`<div class="ptask-row"><span class="ptask-name">${short}</span><div class="ptask-track"><div class="ptask-fill ${cls}" style="width:${w}%"></div></div><span class="ptask-vals">${d.min} min · ${d.cnt}×</span></div>`;}).join('')}`;
 }
 
 function renderTaskBreakdown(containerId,byTask){
@@ -446,33 +509,37 @@ function renderTaskBreakdown(containerId,byTask){
   if(!activeTasks.length){list.innerHTML='<div class="empty">Aucune donnée.</div>';return;}
   list.innerHTML='<div class="task-breakdown-card">'+activeTasks.map(task=>{
     const d=byTask[task];
-    const totalMin=(d['Anaïs'].min||0)+(d['Maxime'].min||0)+(d['Commun'].min||0);
-    const totalCnt=(d['Anaïs'].cnt||0)+(d['Maxime'].cnt||0)+(d['Commun'].cnt||0);
-    return`<div class="task-breakdown-row"><div class="task-breakdown-name">${task} <span style="font-size:10px;color:var(--hint);font-weight:400">— ${totalMin} min · ${totalCnt} fois</span></div>${[['Anaïs','anais'],['Maxime','maxime'],['Commun','commun']].map(([who,cls])=>{const md=d[who];if(!md.min&&!md.cnt)return'';const w=totalMin>0?Math.round(md.min/totalMin*100):0;return`<div class="task-who-row"><span class="task-who-label ${cls}">${who}</span><div class="task-who-track"><div class="task-who-fill ${cls}" style="width:${w}%"></div></div><span class="task-who-vals">${md.min} min · ${md.cnt}×</span></div>`;}).join('')}</div>`;
+    const totalMin=(d['Anaïs']?d['Anaïs'].min:0)+(d['Maxime']?d['Maxime'].min:0);
+    const totalCnt=(d['Anaïs']?d['Anaïs'].cnt:0)+(d['Maxime']?d['Maxime'].cnt:0);
+    return`<div class="task-breakdown-row"><div class="task-breakdown-name">${task} <span style="font-size:10px;color:var(--hint);font-weight:400">— ${totalMin} min · ${totalCnt} fois</span></div>${[['Anaïs','anais'],['Maxime','maxime']].map(([who,cls])=>{const md=d[who];if(!md||(!md.min&&!md.cnt))return'';const w=totalMin>0?Math.round(md.min/totalMin*100):0;return`<div class="task-who-row"><span class="task-who-label ${cls}">${who}</span><div class="task-who-track"><div class="task-who-fill ${cls}" style="width:${w}%"></div></div><span class="task-who-vals">${md.min} min · ${md.cnt}×</span></div>`;}).join('')}</div>`;
   }).join('')+'</div>';
 }
 
-function renderSubSemaine(entries){
-  const{totals,byTask}=calcStats(entries||weekEntries());
-  renderDonut('pieChartS','legendS',entries||weekEntries(),'__pieS');
+function renderSubSemaine(){
+  const entries=filterEntries(statsWeek,statsYear);
+  const{totals,byTask}=calcStats(entries);
+  updateWeekHdr('s-week-title','s-week-sub',statsWeek,statsYear);
+  renderPctBar('s-pct-bar','s-pct-a','s-pct-m','s-pct-av','s-pct-mv',totals);
+  renderDonut('pieChartS','legendS',entries,'__pieS');
   renderPersonCard('s-card-anais','Anaïs',totals,byTask);
   renderPersonCard('s-card-maxime','Maxime',totals,byTask);
   renderTaskBreakdown('s-task-breakdown',byTask);
 }
 
 function renderSubMois(){
-  const MOIS=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
   document.getElementById('month-label').textContent=MOIS[currentMonth]+' '+currentMonthYear;
-  const entries=monthEntries();
+  const entries=monthEntries(currentMonth,currentMonthYear);
   const{totals,byTask}=calcStats(entries);
   document.getElementById('m-tot-anais').textContent=totals['Anaïs'].min;document.getElementById('m-cnt-anais').textContent=totals['Anaïs'].cnt;
   document.getElementById('m-tot-maxime').textContent=totals['Maxime'].min;document.getElementById('m-cnt-maxime').textContent=totals['Maxime'].cnt;
-  document.getElementById('m-tot-commun').textContent=totals['Commun'].min;document.getElementById('m-cnt-commun').textContent=totals['Commun'].cnt;
-  const weeksInMonth=getWeeksInMonth(currentMonth,currentMonthYear);
-  const barsHtml=weeksInMonth.map(({w,y,label})=>{
-    const we=weekEntries(w,y);const{totals:wt}=calcStats(we);
-    const maxVal=Math.max(wt['Anaïs'].min,wt['Maxime'].min,wt['Commun'].min,1);
-    return`<div class="week-chart-row"><span class="week-chart-lbl">${label}</span><div class="week-chart-bars">${[['Anaïs','anais'],['Maxime','maxime'],['Commun','commun']].map(([who,cls])=>wt[who].min>0?`<div class="mini-bar-row"><div class="mini-bar" style="width:${Math.round(wt[who].min/maxVal*110)}px;background:var(--${cls})"></div><span class="mini-val">${wt[who].min}</span></div>`:'').join('')}</div></div>`;
+  renderPctBar('m-pct-bar','m-pct-a','m-pct-m','m-pct-av','m-pct-mv',totals);
+  const last4=getLast4Weeks(currentMonth,currentMonthYear);
+  const allMins=last4.flatMap(({w,y})=>{const we=filterEntries(w,y);const{totals:wt}=calcStats(we);return[wt['Anaïs'].min,wt['Maxime'].min];});
+  const globalMax=Math.max(...allMins,1);
+  const BAR_MAX_PX=110;
+  const barsHtml=last4.map(({w,y,label})=>{
+    const we=filterEntries(w,y);const{totals:wt}=calcStats(we);
+    return`<div class="week-chart-row"><span class="week-chart-lbl">${label}</span><div class="week-chart-bars">${wt['Anaïs'].min>0?`<div class="mini-bar-row"><div class="mini-bar" style="width:${Math.round(wt['Anaïs'].min/globalMax*BAR_MAX_PX)}px;background:var(--anais)"></div><span class="mini-val">${wt['Anaïs'].min}</span></div>`:''} ${wt['Maxime'].min>0?`<div class="mini-bar-row"><div class="mini-bar" style="width:${Math.round(wt['Maxime'].min/globalMax*BAR_MAX_PX)}px;background:var(--maxime)"></div><span class="mini-val">${wt['Maxime'].min}</span></div>`:''}</div></div>`;
   }).join('');
   document.getElementById('m-week-bars').innerHTML=barsHtml||'<div class="empty" style="font-size:12px;padding:8px 0">Aucune donnée ce mois.</div>';
   renderDonut('pieChartM','legendM',entries,'__pieM');
@@ -481,36 +548,34 @@ function renderSubMois(){
   renderTaskBreakdown('m-task-breakdown',byTask);
 }
 
-function getWeeksInMonth(month,year){
-  const weeks=[];const seen=new Set();
-  const d=new Date(year,month,1);
-  while(d.getMonth()===month){
+function getLast4Weeks(month,year){
+  const result=[];const seen=new Set();
+  const d=new Date(year,month+1,0);
+  while(result.length<4&&d>=new Date(year,month,1)){
     const w=isoWeek(d);const y=d.getFullYear();
     const key=y+'-'+w;
-    if(!seen.has(key)){seen.add(key);const start=new Date(d);const label='Sem. '+w;weeks.push({w,y,label,start});}
-    d.setDate(d.getDate()+7);
+    if(!seen.has(key)){seen.add(key);result.unshift({w,y,label:'Sem. '+w});}
+    d.setDate(d.getDate()-7);
   }
-  return weeks;
+  return result;
 }
 
 function renderSubPlage(){
   const from=document.getElementById('p-from').value;
   const to=document.getElementById('p-to').value;
-  if(!from||!to){return;}
+  if(!from||!to)return;
   const entries=rangeEntries(from,to);
   const{totals,byTask}=calcStats(entries);
   const fDate=new Date(from+'T12:00:00'),tDate=new Date(to+'T12:00:00');
   const days=Math.round((tDate-fDate)/86400000)+1;
   const fmt=d=>d.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
   document.getElementById('p-hdr-txt').textContent=fmt(fDate)+' → '+fmt(tDate);
-  const totalTasks=totals['Anaïs'].cnt+totals['Maxime'].cnt+totals['Commun'].cnt;
-  const totalMin=totals['Anaïs'].min+totals['Maxime'].min+totals['Commun'].min;
+  const totalTasks=totals['Anaïs'].cnt+totals['Maxime'].cnt;
+  const totalMin=totals['Anaïs'].min+totals['Maxime'].min;
   document.getElementById('p-hdr-sub').textContent=days+' jour(s) · '+totalTasks+' tâches · '+totalMin+' min';
   document.getElementById('p-tot-anais').textContent=totals['Anaïs'].min;document.getElementById('p-cnt-anais').textContent=totals['Anaïs'].cnt;
   document.getElementById('p-tot-maxime').textContent=totals['Maxime'].min;document.getElementById('p-cnt-maxime').textContent=totals['Maxime'].cnt;
-  document.getElementById('p-tot-commun').textContent=totals['Commun'].min;document.getElementById('p-cnt-commun').textContent=totals['Commun'].cnt;
-  const personal=totals['Anaïs'].min+totals['Maxime'].min;
-  if(personal>0){const pA=Math.round(totals['Anaïs'].min/personal*100);document.getElementById('p-bar-a').style.width=pA+'%';document.getElementById('p-bar-m').style.width=(100-pA)+'%';document.getElementById('p-pct-a').textContent=pA+'%';document.getElementById('p-pct-m').textContent=(100-pA)+'%';}
+  renderPctBar('p-pct-bar','p-pct-a','p-pct-m','p-pct-av','p-pct-mv',totals);
   renderDonut('pieChartP','legendP',entries,'__pieP');
   renderPersonCard('p-card-anais','Anaïs',totals,byTask);
   renderPersonCard('p-card-maxime','Maxime',totals,byTask);
@@ -519,6 +584,9 @@ function renderSubPlage(){
 }
 
 document.getElementById('btn-calc').addEventListener('click',renderSubPlage);
+
+document.getElementById('s-prev-week').addEventListener('click',()=>{statsWeek--;if(statsWeek<1){statsYear--;statsWeek=52;}renderSubSemaine();});
+document.getElementById('s-next-week').addEventListener('click',()=>{statsWeek++;if(statsWeek>52){statsYear++;statsWeek=1;}renderSubSemaine();});
 
 document.getElementById('btn-save').addEventListener('click',()=>{
   const who=document.getElementById('f-who').value;
@@ -544,15 +612,15 @@ document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',
   document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('pane-'+btn.dataset.tab).classList.add('active');
+  if(btn.dataset.tab==='history'){updateWeekHdr('h-week-title','h-week-sub',currentWeek,currentYear);renderHistory(filterEntries(currentWeek,currentYear));}
 }));
 
 document.querySelectorAll('.sub-tab').forEach(btn=>btn.addEventListener('click',()=>{
   document.querySelectorAll('.sub-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('sub-semaine').style.display='none';
-  document.getElementById('sub-mois').style.display='none';
-  document.getElementById('sub-plage').style.display='none';
+  ['semaine','mois','plage'].forEach(s=>document.getElementById('sub-'+s).style.display='none');
   document.getElementById('sub-'+btn.dataset.sub).style.display='block';
+  if(btn.dataset.sub==='semaine')renderSubSemaine();
   if(btn.dataset.sub==='mois')renderSubMois();
 }));
 
@@ -564,23 +632,24 @@ document.getElementById('next-month').addEventListener('click',()=>{currentMonth
 function buildRecapText(entries){
   const{totals,byTask}=calcStats(entries);
   const personal=totals['Anaïs'].min+totals['Maxime'].min;
-  const lines=[`=== Récap semaine ${currentWeek} / ${currentYear} ===\n`,'TOTAUX',`Anaïs  : ${totals['Anaïs'].min} min, ${totals['Anaïs'].cnt} tâche(s)`,`Maxime : ${totals['Maxime'].min} min, ${totals['Maxime'].cnt} tâche(s)`,`Commun : ${totals['Commun'].min} min, ${totals['Commun'].cnt} tâche(s)`];
-  if(personal>0){const pA=Math.round(totals['Anaïs'].min/personal*100);lines.push(`Répartition (hors commun) : Anaïs ${pA}% / Maxime ${100-pA}%`);}
+  const lines=[`=== Récap semaine ${currentWeek} / ${currentYear} ===\n`,'TOTAUX',`Anaïs  : ${totals['Anaïs'].min} min, ${totals['Anaïs'].cnt} tâche(s)`,`Maxime : ${totals['Maxime'].min} min, ${totals['Maxime'].cnt} tâche(s)`];
+  if(personal>0){const pA=Math.round(totals['Anaïs'].min/personal*100);lines.push(`Répartition : Anaïs ${pA}% / Maxime ${100-pA}%`);}
   lines.push('\nPAR TÂCHE');
-  TASKS.filter(t=>byTask[t]).forEach(t=>{const d=byTask[t];const tot=d['Anaïs'].min+d['Maxime'].min+d['Commun'].min;lines.push(`${t} (${tot} min) : Anaïs ${d['Anaïs'].min}min×${d['Anaïs'].cnt} | Maxime ${d['Maxime'].min}min×${d['Maxime'].cnt} | Commun ${d['Commun'].min}min×${d['Commun'].cnt}`);});
+  TASKS.filter(t=>byTask[t]).forEach(t=>{const d=byTask[t];const tot=(d['Anaïs']?d['Anaïs'].min:0)+(d['Maxime']?d['Maxime'].min:0);lines.push(`${t} (${tot} min) : Anaïs ${d['Anaïs']?d['Anaïs'].min:0}min×${d['Anaïs']?d['Anaïs'].cnt:0} | Maxime ${d['Maxime']?d['Maxime'].min:0}min×${d['Maxime']?d['Maxime'].cnt:0}`);});
   return lines.join('\n');
 }
 
 document.getElementById('btn-send-recap').addEventListener('click',()=>{
-  const entries=weekEntries();
+  const entries=filterEntries(currentWeek,currentYear);
+  const{totals}=calcStats(entries);
   document.getElementById('modal-title').textContent=`Récap — semaine ${currentWeek}`;
-  document.getElementById('modal-content').innerHTML=entries.length?`<div class="recap-block"><div class="recap-block-title">Totaux</div>${['Anaïs','Maxime','Commun'].map(w=>`<div class="recap-line">${w} : <strong>${calcStats(entries).totals[w].min} min</strong>, ${calcStats(entries).totals[w].cnt} tâche(s)</div>`).join('')}</div><div class="recap-block"><div class="recap-block-title">Par tâche</div>${TASKS.filter(t=>calcStats(entries).byTask[t]).map(t=>{const d=calcStats(entries).byTask[t];const tot=d['Anaïs'].min+d['Maxime'].min+d['Commun'].min;return`<div class="recap-line"><strong>${t}</strong> — ${tot} min<br><span style="font-size:11px;color:var(--muted)">Anaïs ${d['Anaïs'].min}min×${d['Anaïs'].cnt} | Maxime ${d['Maxime'].min}min×${d['Maxime'].cnt} | Commun ${d['Commun'].min}min×${d['Commun'].cnt}</span></div>`;}).join('')}</div>`:'<div class="empty">Aucune donnée cette semaine.</div>';
+  document.getElementById('modal-content').innerHTML=entries.length?`<div class="recap-block"><div class="recap-block-title">Totaux</div><div class="recap-line">Anaïs : <strong>${totals['Anaïs'].min} min</strong>, ${totals['Anaïs'].cnt} tâche(s)</div><div class="recap-line">Maxime : <strong>${totals['Maxime'].min} min</strong>, ${totals['Maxime'].cnt} tâche(s)</div></div><div class="recap-block"><div class="recap-block-title">Par tâche</div>${TASKS.filter(t=>calcStats(entries).byTask[t]).map(t=>{const d=calcStats(entries).byTask[t];const tot=(d['Anaïs']?d['Anaïs'].min:0)+(d['Maxime']?d['Maxime'].min:0);return`<div class="recap-line"><strong>${t}</strong> — ${tot} min<br><span style="font-size:11px;color:var(--muted)">Anaïs ${d['Anaïs']?d['Anaïs'].min:0}min×${d['Anaïs']?d['Anaïs'].cnt:0} | Maxime ${d['Maxime']?d['Maxime'].min:0}min×${d['Maxime']?d['Maxime'].cnt:0}</span></div>`;}).join('')}</div>`:'<div class="empty">Aucune donnée cette semaine.</div>';
   document.getElementById('modal-bg').classList.add('open');
 });
 
 document.getElementById('modal-close').addEventListener('click',()=>document.getElementById('modal-bg').classList.remove('open'));
 document.getElementById('modal-send').addEventListener('click',()=>{
-  const entries=weekEntries();
+  const entries=filterEntries(currentWeek,currentYear);
   const email=document.getElementById('cfg-email').value.trim();
   const serviceId=document.getElementById('cfg-ejsService').value.trim();
   const templateId=document.getElementById('cfg-ejsTemplate').value.trim();
@@ -615,7 +684,9 @@ const saved=localStorage.getItem(STORAGE_KEY);
 if(saved){try{const cfg=JSON.parse(saved);document.getElementById('cfg-apiKey').value=cfg.apiKey||'';document.getElementById('cfg-projectId').value=cfg.projectId||'';document.getElementById('cfg-dbUrl').value=cfg.dbUrl||'';document.getElementById('cfg-email').value=cfg.email||'';document.getElementById('cfg-ejsService').value=cfg.ejsService||'';document.getElementById('cfg-ejsTemplate').value=cfg.ejsTemplate||'';document.getElementById('cfg-ejsKey').value=cfg.ejsKey||'';document.getElementById('btn-reset').style.display='block';connectFirebase(cfg);}catch(e){}}
 else render();
 
-const now=new Date();document.getElementById('p-from').value=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0];document.getElementById('p-to').value=now.toISOString().split('T')[0];
+const now=new Date();
+document.getElementById('p-from').value=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0];
+document.getElementById('p-to').value=now.toISOString().split('T')[0];
 })();
 </script>
 </body>
