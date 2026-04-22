@@ -255,6 +255,10 @@ body{max-width:480px;margin:0 auto;}
           <button class="week-hdr-btn" id="s-next-week">›</button>
         </div>
       </div>
+      <div class="summary" style="padding:0 0 10px;">
+        <div class="sum-card anais"><div class="sum-label">Anaïs</div><div class="sum-value" id="s-tot-anais" style="font-size:17px">0</div><div class="sum-sub"><span id="s-cnt-anais">0</span> tâche(s)</div></div>
+        <div class="sum-card maxime"><div class="sum-label">Maxime</div><div class="sum-value" id="s-tot-maxime" style="font-size:17px">0</div><div class="sum-sub"><span id="s-cnt-maxime">0</span> tâche(s)</div></div>
+      </div>
       <div class="pct-bar-wrap" id="s-pct-bar" style="display:none">
         <div class="pct-bar-row"><span class="pct-bar-name">Anaïs</span><div class="pct-bar-track"><div class="pct-bar-fill anais" id="s-pct-a" style="width:0%"></div></div><span class="pct-bar-val" id="s-pct-av">–</span></div>
         <div class="pct-bar-row"><span class="pct-bar-name">Maxime</span><div class="pct-bar-track"><div class="pct-bar-fill maxime" id="s-pct-m" style="width:0%"></div></div><span class="pct-bar-val" id="s-pct-mv">–</span></div>
@@ -343,6 +347,18 @@ body{max-width:480px;margin:0 auto;}
         <div class="week-hdr-title" id="h-week-title">–</div>
         <div class="week-hdr-sub" id="h-week-sub">–</div>
       </div>
+      <div class="week-hdr-nav">
+        <button class="week-hdr-btn" id="h-prev-week">‹</button>
+        <button class="week-hdr-btn" id="h-next-week">›</button>
+      </div>
+    </div>
+    <div class="summary" style="padding:0 0 10px;">
+      <div class="sum-card anais"><div class="sum-label">Anaïs</div><div class="sum-value" id="h-tot-anais" style="font-size:17px">0</div><div class="sum-sub"><span id="h-cnt-anais">0</span> tâche(s)</div></div>
+      <div class="sum-card maxime"><div class="sum-label">Maxime</div><div class="sum-value" id="h-tot-maxime" style="font-size:17px">0</div><div class="sum-sub"><span id="h-cnt-maxime">0</span> tâche(s)</div></div>
+    </div>
+    <div class="bar-wrap visible" id="h-bar-wrap" style="padding:0 0 10px;display:none;">
+      <div class="bar-row"><span class="bar-name">Anaïs</span><div class="bar-track"><div class="bar-fill anais" id="h-bar-a" style="width:0%"></div></div><span class="bar-pct" id="h-pct-a">–</span></div>
+      <div class="bar-row"><span class="bar-name">Maxime</span><div class="bar-track"><div class="bar-fill maxime" id="h-bar-m" style="width:0%"></div></div><span class="bar-pct" id="h-pct-m">–</span></div>
     </div>
     <div class="entries-list" id="entries-list"><div class="empty">Aucune entrée cette semaine.</div></div>
   </div>
@@ -396,6 +412,7 @@ const MOIS=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','
 let db=null,fbApp=null;
 let currentWeek=isoWeek(new Date()),currentYear=new Date().getFullYear();
 let statsWeek=isoWeek(new Date()),statsYear=new Date().getFullYear();
+let historyWeek=isoWeek(new Date()),historyYear=new Date().getFullYear();
 let currentMonth=new Date().getMonth(),currentMonthYear=new Date().getFullYear();
 let allEntries={};
 
@@ -461,7 +478,7 @@ function render(){
   if(personal>0){bw.classList.add('visible');const pA=Math.round(totals['Anaïs'].min/personal*100);document.getElementById('bar-a').style.width=pA+'%';document.getElementById('bar-m').style.width=(100-pA)+'%';document.getElementById('pct-a').textContent=pA+'%';document.getElementById('pct-m').textContent=(100-pA)+'%';}
   else bw.classList.remove('visible');
   updateWeekHdr('h-week-title','h-week-sub',currentWeek,currentYear);
-  renderHistory(entries);
+  renderHistory(filterEntries(currentWeek,currentYear));
 }
 
 function updateWeekHdr(titleId,subId,week,year){
@@ -480,6 +497,27 @@ function renderHistory(entries){
     const ds=d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
     return`<div class="entry"><div class="avatar ${cls}">${e.who[0]}</div><div class="entry-body"><div class="entry-task">${e.task}</div><div class="entry-meta">${e.who} · ${ds}</div></div><div class="entry-min">${e.min} min</div><button class="del-btn" onclick="deleteEntry('${e.id}')">×</button></div>`;
   }).join('');
+}
+
+function renderHistoryPane(){
+  updateWeekHdr('h-week-title','h-week-sub',historyWeek,historyYear);
+  const entries=filterEntries(historyWeek,historyYear);
+  const{totals}=calcStats(entries);
+  document.getElementById('h-tot-anais').textContent=totals['Anaïs'].min;
+  document.getElementById('h-cnt-anais').textContent=totals['Anaïs'].cnt;
+  document.getElementById('h-tot-maxime').textContent=totals['Maxime'].min;
+  document.getElementById('h-cnt-maxime').textContent=totals['Maxime'].cnt;
+  const personal=totals['Anaïs'].min+totals['Maxime'].min;
+  const hw=document.getElementById('h-bar-wrap');
+  if(personal>0){
+    hw.style.display='block';
+    const pA=Math.round(totals['Anaïs'].min/personal*100);
+    document.getElementById('h-bar-a').style.width=pA+'%';
+    document.getElementById('h-bar-m').style.width=(100-pA)+'%';
+    document.getElementById('h-pct-a').textContent=pA+'%';
+    document.getElementById('h-pct-m').textContent=(100-pA)+'%';
+  } else hw.style.display='none';
+  renderHistory(entries);
 }
 
 function renderDonut(canvasId,legendId,entries,instanceKey){
@@ -519,6 +557,10 @@ function renderSubSemaine(){
   const entries=filterEntries(statsWeek,statsYear);
   const{totals,byTask}=calcStats(entries);
   updateWeekHdr('s-week-title','s-week-sub',statsWeek,statsYear);
+  document.getElementById('s-tot-anais').textContent=totals['Anaïs'].min;
+  document.getElementById('s-cnt-anais').textContent=totals['Anaïs'].cnt;
+  document.getElementById('s-tot-maxime').textContent=totals['Maxime'].min;
+  document.getElementById('s-cnt-maxime').textContent=totals['Maxime'].cnt;
   renderPctBar('s-pct-bar','s-pct-a','s-pct-m','s-pct-av','s-pct-mv',totals);
   renderDonut('pieChartS','legendS',entries,'__pieS');
   renderPersonCard('s-card-anais','Anaïs',totals,byTask);
@@ -612,7 +654,7 @@ document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',
   document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('pane-'+btn.dataset.tab).classList.add('active');
-  if(btn.dataset.tab==='history'){updateWeekHdr('h-week-title','h-week-sub',currentWeek,currentYear);renderHistory(filterEntries(currentWeek,currentYear));}
+  if(btn.dataset.tab==='history'){historyWeek=currentWeek;historyYear=currentYear;renderHistoryPane();}
 }));
 
 document.querySelectorAll('.sub-tab').forEach(btn=>btn.addEventListener('click',()=>{
@@ -626,6 +668,8 @@ document.querySelectorAll('.sub-tab').forEach(btn=>btn.addEventListener('click',
 
 document.getElementById('prev-week').addEventListener('click',()=>{currentWeek--;if(currentWeek<1){currentYear--;currentWeek=52;}render();});
 document.getElementById('next-week').addEventListener('click',()=>{currentWeek++;if(currentWeek>52){currentYear++;currentWeek=1;}render();});
+document.getElementById('h-prev-week').addEventListener('click',()=>{historyWeek--;if(historyWeek<1){historyYear--;historyWeek=52;}renderHistoryPane();});
+document.getElementById('h-next-week').addEventListener('click',()=>{historyWeek++;if(historyWeek>52){historyYear++;historyWeek=1;}renderHistoryPane();});
 document.getElementById('prev-month').addEventListener('click',()=>{currentMonth--;if(currentMonth<0){currentMonth=11;currentMonthYear--;}renderSubMois();});
 document.getElementById('next-month').addEventListener('click',()=>{currentMonth++;if(currentMonth>11){currentMonth=0;currentMonthYear++;}renderSubMois();});
 
